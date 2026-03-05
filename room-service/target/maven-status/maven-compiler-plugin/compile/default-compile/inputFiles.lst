@@ -1,0 +1,15 @@
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\client\BookingServiceClient.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\client\HotelServiceClient.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\controller\RoomController.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\dto\request\AddRoom.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\dto\request\UpdateActive.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\dto\request\UpdateRoom.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\dto\response\RoomByHotel.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\dto\response\Rooms.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\Iservice\IRoomService.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\model\Room.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\model\RoomAmenity.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\repository\RoomAmenityRepository.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\repository\RoomRepository.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\RoomServiceApplication.java
+D:\20251\GR2(document)\GR2\GR2_BE\room-service\src\main\java\com\hotel\room_service\service\RoomService.java

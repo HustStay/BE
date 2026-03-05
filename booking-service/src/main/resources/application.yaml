@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: "booking-service"
+
+  datasource:
+    url: "jdbc:postgresql://14.162.146.23:5432/booking_service"
+    username: "root"
+    password: "root@2025"
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+server:
+  port: 8084
+
+eureka:
+  client:
+    service-url:
+      defaultZone: "http://localhost:8761/eureka/"
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
