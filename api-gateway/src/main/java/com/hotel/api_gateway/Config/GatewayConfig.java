@@ -31,6 +31,14 @@ public class GatewayConfig {
                 .route("room-service", r -> r.path("/room-service/**")
                         .filters(f -> f.rewritePath("/room-service/(?<segment>.*)", "/${segment}"))
                         .uri("lb://room-service"))
+                // Chat Service - WebSocket endpoint (must be before REST routes)
+                .route("chat-service-ws", r -> r.path("/chat-service/ws/**")
+                        .filters(f -> f.rewritePath("/chat-service/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://chat-service"))
+                // Chat Service - REST API
+                .route("chat-service", r -> r.path("/chat-service/**")
+                        .filters(f -> f.rewritePath("/chat-service/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://chat-service"))
                 .build();
     }
 }

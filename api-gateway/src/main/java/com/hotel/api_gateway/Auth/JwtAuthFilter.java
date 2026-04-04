@@ -24,7 +24,32 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
+        
+        // Skip authentication for public endpoints
         if (path.startsWith("/user-service/auth/")) {
+            return chain.filter(exchange);
+        }
+
+        // Handle WebSocket connections - get token from query param
+        if (path.contains("/ws")) {
+            String tokenFromQuery = exchange.getRequest().getQueryParams().getFirst("token");
+            if (tokenFromQuery != null && !tokenFromQuery.isEmpty()) {
+                if (jwtUtil.isTokenValid(tokenFromQuery)) {
+                    Claims claims = jwtUtil.extractAllClaims(tokenFromQuery);
+                    String username = claims.getSubject();
+                    int userId = (Integer) claims.get("userId");
+                    List<String> roles = (List<String>) claims.get("authorities");
+
+                    ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                            .header("X-Auth-Username", username)
+                            .header("X-Auth-Roles", String.join(",", roles))
+                            .header("X-Auth-UserId", String.valueOf(userId))
+                            .build();
+
+                    return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                }
+            }
+            // Allow WebSocket to pass through for SockJS handshake
             return chain.filter(exchange);
         }
 

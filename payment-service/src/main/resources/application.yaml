@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: "payment-service"
+
+  datasource:
+    url: "jdbc:postgresql://14.162.146.23:5432/payment_service"
+    username: "root"
+    password: "root@2025"
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8087
+
+eureka:
+  client:
+    service-url:
+      defaultZone: "http://localhost:8761/eureka/"
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Stripe Configuration - Use environment variables for secrets
+stripe:
+  publishable.key: ${STRIPE_PUBLISHABLE_KEY:your-publishable-key}
+  secret.key: ${STRIPE_SECRET_KEY:your-secret-key}
+  success.url: ${STRIPE_SUCCESS_URL:http://localhost:5173/payment/success}
+  cancel.url: ${STRIPE_CANCEL_URL:http://localhost:5173/payment/cancel}

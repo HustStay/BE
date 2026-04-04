@@ -9,7 +9,6 @@ import com.hotel.user_service.dto.response.Customer;
 import com.hotel.user_service.model.User;
 import com.hotel.user_service.repository.UserRepository;
 import com.hotel.user_service.service.UserService;
-import jakarta.ws.rs.HeaderParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
@@ -46,13 +45,12 @@ public class AccountController {
                         .body(Map.of("message", "Account is locked"));
             }
             String token = jwtService.generateToken(username);
-            Map<String, Object> response = Map.of(
-                    "token", token,
-                    "role", user
-                            .orElseThrow(() -> new BadCredentialsException("User not found"))
-                            .getRole().getId(),
-                    "message", "Login successful"
-            );
+            User foundUser = user.orElseThrow(() -> new BadCredentialsException("User not found"));
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("role", foundUser.getRole().getId());
+            response.put("userId", foundUser.getId());
+            response.put("message", "Login successful");
 
             return ResponseEntity.ok(response);
 
