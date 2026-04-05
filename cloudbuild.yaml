@@ -210,9 +210,6 @@ steps:
     - '--allow-unauthenticated'
     id: 'deploy-payment-service'
     waitFor: ['push-payment-service']
-    - '--allow-unauthenticated'
-    id: 'deploy-payment-service'
-    waitFor: ['push-payment-service']
 
   # Deploy Review Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
