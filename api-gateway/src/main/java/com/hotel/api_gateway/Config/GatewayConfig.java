@@ -1,5 +1,6 @@
 package com.hotel.api_gateway.Config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -8,37 +9,62 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GatewayConfig {
 
+    @Value("${services.user-service:lb://user-service}")
+    private String userServiceUrl;
+
+    @Value("${services.booking-service:lb://booking-service}")
+    private String bookingServiceUrl;
+
+    @Value("${services.review-service:lb://review-service}")
+    private String reviewServiceUrl;
+
+    @Value("${services.hotel-service:lb://hotel-service}")
+    private String hotelServiceUrl;
+
+    @Value("${services.room-service:lb://room-service}")
+    private String roomServiceUrl;
+
+    @Value("${services.chat-service:lb://chat-service}")
+    private String chatServiceUrl;
+
+    @Value("${services.payment-service:lb://payment-service}")
+    private String paymentServiceUrl;
+
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
                 // User Service
                 .route("user-service", r -> r.path("/user-service/**")
                         .filters(f -> f.rewritePath("/user-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://user-service"))
+                        .uri(userServiceUrl))
                 // Booking Service
                 .route("booking-service", r -> r.path("/booking-service/**")
                         .filters(f -> f.rewritePath("/booking-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://booking-service"))
+                        .uri(bookingServiceUrl))
                 // Payment Service
+                .route("payment-service", r -> r.path("/payment-service/**")
+                        .filters(f -> f.rewritePath("/payment-service/(?<segment>.*)", "/${segment}"))
+                        .uri(paymentServiceUrl))
+                // Review Service
                 .route("review-service", r -> r.path("/review-service/**")
                         .filters(f -> f.rewritePath("/review-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://review-service"))
+                        .uri(reviewServiceUrl))
                 // Hotel Service
                 .route("hotel-service", r -> r.path("/hotel-service/**")
                         .filters(f -> f.rewritePath("/hotel-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://hotel-service"))
+                        .uri(hotelServiceUrl))
                 //Room Service
                 .route("room-service", r -> r.path("/room-service/**")
                         .filters(f -> f.rewritePath("/room-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://room-service"))
+                        .uri(roomServiceUrl))
                 // Chat Service - WebSocket endpoint (must be before REST routes)
                 .route("chat-service-ws", r -> r.path("/chat-service/ws/**")
                         .filters(f -> f.rewritePath("/chat-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://chat-service"))
+                        .uri(chatServiceUrl))
                 // Chat Service - REST API
                 .route("chat-service", r -> r.path("/chat-service/**")
                         .filters(f -> f.rewritePath("/chat-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://chat-service"))
+                        .uri(chatServiceUrl))
                 .build();
     }
 }

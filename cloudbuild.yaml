@@ -243,7 +243,7 @@ steps:
     - '--platform=managed'
     - '--port=8080'
     - '--memory=1Gi'
-    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false'
+    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,SERVICES_USER_SERVICE=https://user-service-310906765270.asia-southeast1.run.app,SERVICES_HOTEL_SERVICE=https://hotel-service-310906765270.asia-southeast1.run.app,SERVICES_ROOM_SERVICE=https://room-service-310906765270.asia-southeast1.run.app,SERVICES_BOOKING_SERVICE=https://booking-service-310906765270.asia-southeast1.run.app,SERVICES_PAYMENT_SERVICE=https://payment-service-310906765270.asia-southeast1.run.app,SERVICES_REVIEW_SERVICE=https://review-service-310906765270.asia-southeast1.run.app,SERVICES_CHAT_SERVICE=https://chat-service-310906765270.asia-southeast1.run.app'
     - '--set-secrets=JWT_SECRET=jwt-secret:latest'
     - '--allow-unauthenticated'
     id: 'deploy-api-gateway'
