@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
-@FeignClient(name = "hotel-service")
+@FeignClient(name = "hotel-service", url = "${HOTEL_SERVICE_URL:}")
 public interface HotelServiceClient {
     @GetMapping("/hotelId")
     Map<String, Object> checkHotelId(@RequestParam("userId") int userId);

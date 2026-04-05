@@ -12,6 +12,15 @@ spring:
       ddl-auto: update
     show-sql: ${JPA_SHOW_SQL:true}
 
+  cloud:
+    openfeign:
+      client:
+        config:
+          user-service:
+            url: ${USER_SERVICE_URL:http://localhost:8081}
+          hotel-service:
+            url: ${HOTEL_SERVICE_URL:http://localhost:8083}
+
 server:
   port: ${SERVER_PORT:8085}
 

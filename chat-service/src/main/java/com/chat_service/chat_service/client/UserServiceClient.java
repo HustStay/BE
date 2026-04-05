@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
-@FeignClient(name = "user-service")
+@FeignClient(name = "user-service", url = "${USER_SERVICE_URL:}")
 public interface UserServiceClient {
     
     @GetMapping("/fullName")
