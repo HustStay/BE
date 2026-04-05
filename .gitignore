@@ -18,6 +18,7 @@
 **/application-secret.yaml
 **/application-secret.yml
 **/application-secret.properties
+**/secrets/
 
 # Logs
 **/*.log
@@ -29,3 +30,8 @@ Thumbs.db
 
 # Node
 **/node_modules/
+
+# Local env files
+.env
+.env.local
+.env.*.local

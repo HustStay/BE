@@ -1,0 +1,295 @@
+# Cloud Build configuration for HustStay Backend
+# This file configures automatic builds when pushing to GitHub
+
+substitutions:
+  _REGION: asia-southeast1
+  _REPO: huststay-repo
+
+steps:
+  # ========== BUILD ALL SERVICES ==========
+  
+  # Build Eureka Server
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/eureka-server:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/eureka-server:latest', './eureka-server']
+    id: 'build-eureka'
+
+  # Build API Gateway
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway:latest', './api-gateway']
+    id: 'build-api-gateway'
+
+  # Build User Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/user-service:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/user-service:latest', './user-service']
+    id: 'build-user-service'
+
+  # Build Hotel Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/hotel-service:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/hotel-service:latest', './hotel-service']
+    id: 'build-hotel-service'
+
+  # Build Room Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/room-service:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/room-service:latest', './room-service']
+    id: 'build-room-service'
+
+  # Build Booking Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/booking-service:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/booking-service:latest', './booking-service']
+    id: 'build-booking-service'
+
+  # Build Payment Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/payment-service:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/payment-service:latest', './payment-service']
+    id: 'build-payment-service'
+
+  # Build Review Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/review-service:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/review-service:latest', './review-service']
+    id: 'build-review-service'
+
+  # Build Chat Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service:latest', './chat-service']
+    id: 'build-chat-service'
+
+  # ========== PUSH ALL IMAGES ==========
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/eureka-server']
+    id: 'push-eureka'
+    waitFor: ['build-eureka']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway']
+    id: 'push-api-gateway'
+    waitFor: ['build-api-gateway']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/user-service']
+    id: 'push-user-service'
+    waitFor: ['build-user-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/hotel-service']
+    id: 'push-hotel-service'
+    waitFor: ['build-hotel-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/room-service']
+    id: 'push-room-service'
+    waitFor: ['build-room-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/booking-service']
+    id: 'push-booking-service'
+    waitFor: ['build-booking-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/payment-service']
+    id: 'push-payment-service'
+    waitFor: ['build-payment-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/review-service']
+    id: 'push-review-service'
+    waitFor: ['build-review-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service']
+    id: 'push-chat-service'
+    waitFor: ['build-chat-service']
+
+  # ========== DEPLOY TO CLOUD RUN ==========
+  
+  # Deploy Eureka Server (first - no dependencies)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'eureka-server'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/eureka-server:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8761'
+    - '--memory=512Mi'
+    - '--min-instances=1'
+    - '--max-instances=2'
+    - '--allow-unauthenticated'
+    id: 'deploy-eureka'
+    waitFor: ['push-eureka']
+
+  # Deploy User Service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'user-service'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/user-service:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8080'
+    - '--memory=512Mi'
+    - '--set-env-vars=SERVER_PORT=8080'
+    - '--set-env-vars=EUREKA_URL=https://eureka-server-310906765270.asia-southeast1.run.app/eureka/'
+    - '--set-secrets=DB_PASSWORD=db-password:latest'
+    - '--set-secrets=JWT_SECRET=jwt-secret:latest'
+    - '--allow-unauthenticated'
+    id: 'deploy-user-service'
+    waitFor: ['push-user-service', 'deploy-eureka']
+
+  # Deploy Hotel Service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'hotel-service'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/hotel-service:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8080'
+    - '--memory=512Mi'
+    - '--set-env-vars=SERVER_PORT=8080'
+    - '--set-env-vars=EUREKA_URL=https://eureka-server-310906765270.asia-southeast1.run.app/eureka/'
+    - '--set-secrets=DB_PASSWORD=db-password:latest'
+    - '--allow-unauthenticated'
+    id: 'deploy-hotel-service'
+    waitFor: ['push-hotel-service', 'deploy-eureka']
+
+  # Deploy Room Service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'room-service'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/room-service:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8080'
+    - '--memory=512Mi'
+    - '--set-env-vars=SERVER_PORT=8080'
+    - '--set-env-vars=EUREKA_URL=https://eureka-server-310906765270.asia-southeast1.run.app/eureka/'
+    - '--set-secrets=DB_PASSWORD=db-password:latest'
+    - '--allow-unauthenticated'
+    id: 'deploy-room-service'
+    waitFor: ['push-room-service', 'deploy-eureka']
+
+  # Deploy Booking Service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'booking-service'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/booking-service:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8080'
+    - '--memory=512Mi'
+    - '--set-env-vars=SERVER_PORT=8080'
+    - '--set-env-vars=EUREKA_URL=https://eureka-server-310906765270.asia-southeast1.run.app/eureka/'
+    - '--set-secrets=DB_PASSWORD=db-password:latest'
+    - '--set-secrets=GOOGLE_CLIENT_ID=google-client-id:latest'
+    - '--set-secrets=GOOGLE_CLIENT_SECRET=google-client-secret:latest'
+    - '--allow-unauthenticated'
+    id: 'deploy-booking-service'
+    waitFor: ['push-booking-service', 'deploy-eureka']
+
+  # Deploy Payment Service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'payment-service'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/payment-service:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8080'
+    - '--memory=512Mi'
+    - '--set-env-vars=SERVER_PORT=8080'
+    - '--set-env-vars=EUREKA_URL=https://eureka-server-310906765270.asia-southeast1.run.app/eureka/'
+    - '--set-secrets=DB_PASSWORD=db-password:latest'
+    - '--set-secrets=STRIPE_PUBLISHABLE_KEY=stripe-publishable-key:latest'
+    - '--set-secrets=STRIPE_SECRET_KEY=stripe-secret-key:latest'
+    - '--allow-unauthenticated'
+    id: 'deploy-payment-service'
+    waitFor: ['push-payment-service', 'deploy-eureka']
+
+  # Deploy Review Service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'review-service'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/review-service:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8080'
+    - '--memory=512Mi'
+    - '--set-env-vars=SERVER_PORT=8080'
+    - '--set-env-vars=EUREKA_URL=https://eureka-server-310906765270.asia-southeast1.run.app/eureka/'
+    - '--set-secrets=DB_PASSWORD=db-password:latest'
+    - '--allow-unauthenticated'
+    id: 'deploy-review-service'
+    waitFor: ['push-review-service', 'deploy-eureka']
+
+  # Deploy Chat Service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'chat-service'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8080'
+    - '--memory=512Mi'
+    - '--set-env-vars=SERVER_PORT=8080'
+    - '--set-env-vars=EUREKA_URL=https://eureka-server-310906765270.asia-southeast1.run.app/eureka/'
+    - '--set-secrets=DB_PASSWORD=db-password:latest'
+    - '--allow-unauthenticated'
+    id: 'deploy-chat-service'
+    waitFor: ['push-chat-service', 'deploy-eureka']
+
+  # Deploy API Gateway (last - depends on all services)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'api-gateway'
+    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway:$SHORT_SHA'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--port=8080'
+    - '--memory=512Mi'
+    - '--set-env-vars=SERVER_PORT=8080'
+    - '--set-env-vars=EUREKA_URL=https://eureka-server-310906765270.asia-southeast1.run.app/eureka/'
+    - '--set-secrets=JWT_SECRET=jwt-secret:latest'
+    - '--allow-unauthenticated'
+    id: 'deploy-api-gateway'
+    waitFor: ['push-api-gateway', 'deploy-user-service', 'deploy-hotel-service', 'deploy-room-service']
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/eureka-server:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/user-service:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/hotel-service:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/room-service:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/booking-service:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/payment-service:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/review-service:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service:$SHORT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '3600s'
