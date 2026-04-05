@@ -5,6 +5,7 @@ import com.example.booking_service.dto.request.CheckInCheckOut;
 import com.example.booking_service.dto.request.Update;
 import com.example.booking_service.service.BookingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -14,11 +15,16 @@ import java.util.Map;
 
 @RequestMapping
 @RestController
-@RequiredArgsConstructor
 public class BookingController {
 
     private final BookingService bookingService;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    
+    @Autowired(required = false)
+    private KafkaTemplate<String, Object> kafkaTemplate;
+    
+    public BookingController(BookingService bookingService) {
+        this.bookingService = bookingService;
+    }
 
     @PostMapping("/booking")
     public ResponseEntity<Map<String,Object>> booking(@RequestHeader("X-Auth-UserId") String userIdStr,
@@ -26,18 +32,21 @@ public class BookingController {
         Map<String,Object> response = new HashMap<>();
         int customerId = Integer.parseInt(userIdStr);
         try {
-            // Tạo booking event để gửi qua Kafka
-            Map<String, Object> bookingEvent = new HashMap<>();
-            bookingEvent.put("customerId", customerId);
-            bookingEvent.put("hotelId", booking.hotelId);
-            bookingEvent.put("checkInDate", booking.checkInDate.toString());
-            bookingEvent.put("checkOutDate", booking.checkOutDate.toString());
-            bookingEvent.put("guests", booking.guests);
-            bookingEvent.put("bookingType", booking.bookingType.toString());
-            bookingEvent.put("bookingItems", booking.bookingItems);
-            
-            // Gửi message đến Kafka topic
-            kafkaTemplate.send("booking-topic", String.valueOf(customerId), bookingEvent);
+            // Only send Kafka message if KafkaTemplate is available
+            if (kafkaTemplate != null) {
+                // Tạo booking event để gửi qua Kafka
+                Map<String, Object> bookingEvent = new HashMap<>();
+                bookingEvent.put("customerId", customerId);
+                bookingEvent.put("hotelId", booking.hotelId);
+                bookingEvent.put("checkInDate", booking.checkInDate.toString());
+                bookingEvent.put("checkOutDate", booking.checkOutDate.toString());
+                bookingEvent.put("guests", booking.guests);
+                bookingEvent.put("bookingType", booking.bookingType.toString());
+                bookingEvent.put("bookingItems", booking.bookingItems);
+                
+                // Gửi message đến Kafka topic
+                kafkaTemplate.send("booking-topic", String.valueOf(customerId), bookingEvent);
+            }
             
             // Xử lý booking trong service
             boolean add = bookingService.addBooking(customerId,booking);

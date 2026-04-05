@@ -13,6 +13,7 @@ spring:
     show-sql: ${JPA_SHOW_SQL:true}
 
   kafka:
+    enabled: ${KAFKA_ENABLED:false}
     bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
