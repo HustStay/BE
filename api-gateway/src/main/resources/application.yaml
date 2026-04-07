@@ -1,6 +1,10 @@
 spring:
   application:
     name: "api-gateway"
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers, RETAIN_FIRST
   security:
     jwt:
       secret-key: ${JWT_SECRET:b6a4f2319dbde50cf2a1e476ec9f77e3d8c22148790c4e537103c0f77e3a6c42}
