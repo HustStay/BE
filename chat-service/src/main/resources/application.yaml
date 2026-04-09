@@ -26,3 +26,6 @@ eureka:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90
+
+chat:
+  allowed-origins: ${CHAT_ALLOWED_ORIGINS:*}
