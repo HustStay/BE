@@ -49,9 +49,10 @@ public class BookingController {
             }
             
             // Xử lý booking trong service
-            boolean add = bookingService.addBooking(customerId,booking);
-            if(add){
+            Integer bookingId = bookingService.addBooking(customerId, booking);
+            if (bookingId != null) {
                 response.put("message","Booking successfully");
+                response.put("bookingId", bookingId);
             }else {
                 response.put("message","Booking failed");
             }
