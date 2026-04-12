@@ -32,14 +32,29 @@ public class PaymentService implements IPaymentService {
     @Value("${payos.cancel-url}")
     private String cancelUrl;
 
+    @Value("${payos.client-id}")
+    private String clientId;
+
+    @Value("${payos.api-key}")
+    private String apiKey;
+
+    @Value("${payos.checksum-key}")
+    private String checksumKey;
+
     @Override
     public PaymentSessionResponse createPaymentLink(CreatePaymentRequest request) {
         try {
             if (request.getBookingId() == null || request.getBookingId() <= 0) {
                 throw new RuntimeException("Thiếu bookingId hợp lệ");
             }
+            if (isPlaceholder(clientId) || isPlaceholder(apiKey) || isPlaceholder(checksumKey)) {
+                throw new RuntimeException("Cấu hình PayOS API key/client id/checksum chưa hợp lệ");
+            }
+            if (isPlaceholder(returnUrl) || isPlaceholder(cancelUrl)) {
+                throw new RuntimeException("Cấu hình URL callback PayOS chưa hợp lệ");
+            }
             // Generate unique orderCode from timestamp
-            long orderCode = System.currentTimeMillis() / 1000;
+            long orderCode = System.currentTimeMillis();
 
             // PayOS requires amount in VND (integer), min 2000
             long amount = Math.max(request.getAmount(), 2000L);
@@ -48,12 +63,14 @@ public class PaymentService implements IPaymentService {
             String description = truncate("Dat phong #" + request.getBookingId(), 25);
 
             // Build PayOS payment link request
+            String safeReturnUrl = buildCallbackUrl(returnUrl, orderCode);
+            String safeCancelUrl = buildCallbackUrl(cancelUrl, orderCode);
             CreatePaymentLinkRequest paymentLinkRequest = CreatePaymentLinkRequest.builder()
                     .orderCode(orderCode)
                     .amount(amount)
                     .description(description)
-                    .returnUrl(returnUrl + "?orderCode=" + orderCode)
-                    .cancelUrl(cancelUrl + "?orderCode=" + orderCode)
+                    .returnUrl(safeReturnUrl)
+                    .cancelUrl(safeCancelUrl)
                     .build();
 
             log.info("Creating PayOS payment link for bookingId={}, orderCode={}, amount={}",
@@ -159,5 +176,22 @@ public class PaymentService implements IPaymentService {
     private String truncate(String text, int maxLength) {
         if (text == null) return "";
         return text.length() <= maxLength ? text : text.substring(0, maxLength);
+    }
+
+    private String buildCallbackUrl(String baseUrl, long orderCode) {
+        String normalized = normalizeUrl(baseUrl);
+        String separator = normalized.contains("?") ? "&" : "?";
+        return normalized + separator + "orderCode=" + orderCode;
+    }
+
+    private String normalizeUrl(String url) {
+        if (url == null) return "";
+        return url.trim().replaceAll("(?<!:)/{2,}", "/");
+    }
+
+    private boolean isPlaceholder(String value) {
+        if (value == null) return true;
+        String lower = value.trim().toLowerCase();
+        return lower.contains("your-") || lower.contains("example") || lower.isBlank();
     }
 }
