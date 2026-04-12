@@ -9,6 +9,5 @@ import java.util.Optional;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByBookingId(Long bookingId);
-    Optional<Payment> findByStripeSessionId(String stripeSessionId);
-    Optional<Payment> findByStripePaymentIntentId(String stripePaymentIntentId);
+    Optional<Payment> findByOrderCode(String orderCode);
 }

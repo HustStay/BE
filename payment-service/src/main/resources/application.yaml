@@ -35,9 +35,10 @@ eureka:
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90
 
-# Stripe Configuration - Use environment variables for secrets
-stripe:
-  publishable.key: ${STRIPE_PUBLISHABLE_KEY:your-publishable-key}
-  secret.key: ${STRIPE_SECRET_KEY:your-secret-key}
-  success.url: ${STRIPE_SUCCESS_URL:http://localhost:5173/payment/success}
-  cancel.url: ${STRIPE_CANCEL_URL:http://localhost:5173/payment/cancel}
+# PayOS Configuration - Use environment variables for secrets
+payos:
+  client-id: ${PAYOS_CLIENT_ID:your-client-id}
+  api-key: ${PAYOS_API_KEY:your-api-key}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:your-checksum-key}
+  return-url: ${PAYOS_RETURN_URL:http://localhost:5173/payment/success}
+  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:5173/payment/cancel}

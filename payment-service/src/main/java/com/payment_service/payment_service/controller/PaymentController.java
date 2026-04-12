@@ -3,69 +3,114 @@ package com.payment_service.payment_service.controller;
 import com.payment_service.payment_service.dto.CreatePaymentRequest;
 import com.payment_service.payment_service.dto.PaymentSessionResponse;
 import com.payment_service.payment_service.service.PaymentService;
-import com.payment_service.payment_service.service.StripeService;
-import com.stripe.exception.StripeException;
-import com.stripe.model.checkout.Session;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import vn.payos.PayOS;
+import vn.payos.model.webhooks.Webhook;
 
-@RestController
-@RequestMapping("/api/payment-service/stripe")
-@RequiredArgsConstructor
+import java.util.Map;
+
 @Slf4j
+@RestController
+@RequestMapping("/api/payment-service")
+@RequiredArgsConstructor
 public class PaymentController {
 
-    private final StripeService stripeService;
     private final PaymentService paymentService;
+    private final PayOS payOS;
 
-    @PostMapping("/create-payment-session")
-    public ResponseEntity<PaymentSessionResponse> createPaymentSession(@ModelAttribute CreatePaymentRequest request) {
+    /**
+     * Tạo link thanh toán PayOS
+     * POST /api/payment-service/payos/create-payment-link
+     */
+    @PostMapping("/payos/create-payment-link")
+    public ResponseEntity<?> createPaymentLink(@RequestBody CreatePaymentRequest request) {
         try {
-            log.info("Creating payment session for booking: {}, amount: {}", request.getBookingId(), request.getAmount());
-            
-            Session session = stripeService.createCheckoutSession(request);
-            
-            PaymentSessionResponse response = PaymentSessionResponse.builder()
-                    .sessionUrl(session.getUrl())
-                    .sessionId(session.getId())
-                    .bookingId(request.getBookingId())
-                    .amount(request.getAmount())
-                    .status("CREATED")
-                    .build();
-            
+            log.info("Received payment request for bookingId={}, amount={}", request.getBookingId(),
+                    request.getAmount());
+            PaymentSessionResponse response = paymentService.createPaymentLink(request);
             return ResponseEntity.ok(response);
-        } catch (StripeException e) {
-            log.error("Stripe error creating session for booking: {}", request.getBookingId(), e);
-            return ResponseEntity.status(500).body(
-                PaymentSessionResponse.builder()
-                    .status("ERROR")
-                    .build()
-            );
+        } catch (Exception e) {
+            log.error("Error creating payment link: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    @GetMapping("/session/{sessionId}")
-    public ResponseEntity<?> getSession(@PathVariable String sessionId) {
+    /**
+     * Lấy thông tin thanh toán theo orderCode
+     * GET /api/payment-service/payos/payment/{orderCode}
+     */
+    @GetMapping("/payos/payment/{orderCode}")
+    public ResponseEntity<?> getPaymentByOrderCode(@PathVariable Long orderCode) {
         try {
-            log.info("Retrieving session: {}", sessionId);
-            Session session = stripeService.getSession(sessionId);
-            
-            // Nếu payment thành công, xử lý logic
-            if ("complete".equals(session.getStatus()) && "paid".equals(session.getPaymentStatus())) {
-                paymentService.handlePaymentSuccess(sessionId, session);
-            }
-            
-            return ResponseEntity.ok(session);
-        } catch (StripeException e) {
-            log.error("Error retrieving session: {}", sessionId, e);
-            return ResponseEntity.status(404).body("Session not found");
+            PaymentSessionResponse response = paymentService.getPaymentByOrderCode(orderCode);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error getting payment info: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    @GetMapping("/health")
-    public ResponseEntity<String> health() {
-        return ResponseEntity.ok("Payment Service is running");
+    /**
+     * Hủy thanh toán
+     * POST /api/payment-service/payos/cancel/{orderCode}
+     */
+    @PostMapping("/payos/cancel/{orderCode}")
+    public ResponseEntity<?> cancelPayment(@PathVariable Long orderCode) {
+        try {
+            paymentService.cancelPayment(orderCode);
+            return ResponseEntity.ok(Map.of("message", "Đã hủy thanh toán thành công"));
+        } catch (Exception e) {
+            log.error("Error cancelling payment: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Webhook từ PayOS - nhận thông báo khi thanh toán thành công/thất bại
+     * POST /api/payment-service/payos/webhook
+     */
+    @PostMapping("/payos/webhook")
+    public ResponseEntity<String> handleWebhook(@RequestBody Webhook webhook) {
+        try {
+            log.info("Received PayOS webhook");
+            var data = payOS.webhooks().verify(webhook);
+            log.info("PayOS webhook verified - orderCode={}, status={}", data.getOrderCode(), data.getDesc());
+
+            // Nếu thanh toán thành công
+            if ("00".equals(data.getCode()) || "PAID".equalsIgnoreCase(data.getDesc())) {
+                paymentService.handlePaymentSuccess(data.getOrderCode());
+            } else {
+                log.warn("PayOS webhook - payment not successful: code={}, desc={}", data.getCode(), data.getDesc());
+            }
+
+            return ResponseEntity.ok("OK");
+        } catch (Exception e) {
+            log.error("Webhook verification failed: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body("Invalid webhook");
+        }
+    }
+
+    /**
+     * Return URL handler - xác nhận thanh toán thành công sau khi redirect từ PayOS
+     * GET /api/payment-service/payos/success
+     */
+    @GetMapping("/payos/success")
+    public ResponseEntity<?> handlePaymentSuccess(
+            @RequestParam(value = "orderCode", required = false) Long orderCode,
+            @RequestParam(value = "status", required = false) String status) {
+        try {
+            if (orderCode != null && "PAID".equalsIgnoreCase(status)) {
+                paymentService.handlePaymentSuccess(orderCode);
+                log.info("Payment confirmed via return URL - orderCode={}", orderCode);
+            }
+            PaymentSessionResponse payment = paymentService.getPaymentByOrderCode(orderCode);
+            return ResponseEntity.ok(payment);
+        } catch (Exception e) {
+            log.error("Error handling payment return: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }
