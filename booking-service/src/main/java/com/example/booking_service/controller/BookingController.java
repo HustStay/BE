@@ -4,7 +4,6 @@ import com.example.booking_service.dto.request.AddBooking;
 import com.example.booking_service.dto.request.CheckInCheckOut;
 import com.example.booking_service.dto.request.Update;
 import com.example.booking_service.service.BookingService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
