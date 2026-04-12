@@ -35,6 +35,9 @@ public class PaymentService implements IPaymentService {
     @Override
     public PaymentSessionResponse createPaymentLink(CreatePaymentRequest request) {
         try {
+            if (request.getBookingId() == null || request.getBookingId() <= 0) {
+                throw new RuntimeException("Thiếu bookingId hợp lệ");
+            }
             // Generate unique orderCode from timestamp
             long orderCode = System.currentTimeMillis() / 1000;
 
