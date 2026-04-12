@@ -37,8 +37,8 @@ eureka:
 
 # PayOS Configuration - Use environment variables for secrets
 payos:
-  client-id: ${PAYOS_CLIENT_ID:your-client-id}
-  api-key: ${PAYOS_API_KEY:your-api-key}
-  checksum-key: ${PAYOS_CHECKSUM_KEY:your-checksum-key}
-  return-url: ${PAYOS_RETURN_URL:http://localhost:5173/payment/success}
-  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:5173/payment/cancel}
+  client-id: ${PAYOS_CLIENT_ID:7fdf49c6-eb90-4af7-9144-b014aff389c4}
+  api-key: ${PAYOS_API_KEY:eb8139de-7a1a-4543-85d2-69e3e986f78e}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:ef0b57e918bf657a994e4b81b45e7754738f17294cabd5665ff4956ce10ee36b}
+  return-url: ${PAYOS_RETURN_URL:https://stay.hotelrestaurant.net/payment/success}
+  cancel-url: ${PAYOS_CANCEL_URL:https://stay.hotelrestaurant.net/payment/cancel}
