@@ -13,7 +13,7 @@ spring:
     show-sql: ${JPA_SHOW_SQL:true}
 
 server:
-  port: ${SERVER_PORT:8086}
+  port: ${PORT:${SERVER_PORT:8086}}
 
 eureka:
   client:
