@@ -59,8 +59,8 @@ public class PaymentService implements IPaymentService {
             // PayOS requires amount in VND (integer), min 2000
             long amount = Math.max(request.getAmount(), 2000L);
 
-            // Description max 25 chars for PayOS
-            String description = truncate("Dat phong #" + request.getBookingId(), 25);
+            // Description max 25 chars for PayOS, only alphanumeric and spaces allowed
+            String description = truncate("Thanh toan RP " + request.getBookingId(), 25);
 
             // Build PayOS payment link request
             String safeReturnUrl = buildCallbackUrl(returnUrl, orderCode);
