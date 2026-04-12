@@ -9,7 +9,7 @@ import com.example.booking_service.dto.response.Books;
 import java.util.List;
 
 public interface IBookingService {
-    boolean addBooking(int customerId,AddBooking addBooking);
+    Integer addBooking(int customerId, AddBooking addBooking);
     List<Bookings> getBookingsByCustomerId(int customerId);
     int getBookedRooms(int hotelId, String checkInDate, String checkOutDate);
     boolean updateBookingStatus(Update update);

@@ -34,15 +34,15 @@ public class BookingService implements IBookingService {
     private UserServiceClient userServiceClient;
 
     @Override
-    public boolean addBooking(int customerId, AddBooking addBooking) {
+    public Integer addBooking(int customerId, AddBooking addBooking) {
         Map<String, Object> response = hotelServiceClient.checkHotelExists(addBooking.hotelId);
         boolean hotelExists = (boolean) response.get("exists");
         if (!hotelExists) {
-            return false;
+            return null;
         }
 
         if (addBooking.bookingItems == null || addBooking.bookingItems.isEmpty()) {
-            return false;
+            return null;
         }
 
         List<Booking> bookings = new ArrayList<>();
@@ -65,8 +65,11 @@ public class BookingService implements IBookingService {
 
             bookings.add(booking);
         }
-        bookingRepository.saveAll(bookings);
-        return true;
+        List<Booking> savedBookings = bookingRepository.saveAll(bookings);
+        if (savedBookings.isEmpty()) {
+            return null;
+        }
+        return savedBookings.get(0).getId();
     }
 
     @Override
