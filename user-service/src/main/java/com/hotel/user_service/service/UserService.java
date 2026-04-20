@@ -30,7 +30,7 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
 
     @Autowired
-    private  UserRepository userRepository;
+    private UserRepository userRepository;
     @Autowired
     private RoleRepository roleRepository;
     @Autowired
@@ -39,7 +39,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) {
         Optional<User> userOptional = userRepository.findByUsername(username);
-        if(userOptional.isPresent()) {
+        if (userOptional.isPresent()) {
             User user = userOptional.get();
             GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole());
 
@@ -58,7 +58,7 @@ public class UserService implements UserDetailsService {
         }
 
         Role roles = roleRepository.findById(request.role);
-        if (request.role == 1){
+        if (request.role == 1) {
             User user = User.builder()
                     .full_name(request.fullName)
                     .password(passwordEncoder.encode(request.password))
@@ -73,7 +73,7 @@ public class UserService implements UserDetailsService {
                     .build();
             userRepository.save(user);
         }
-        if (request.role == 2){
+        if (request.role == 2) {
             User user = User.builder()
                     .full_name(request.fullName)
                     .password(passwordEncoder.encode(request.password))
@@ -111,7 +111,7 @@ public class UserService implements UserDetailsService {
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            if(passwordEncoder.matches(body.oldPassword, user.getPassword())) {
+            if (passwordEncoder.matches(body.oldPassword, user.getPassword())) {
                 user.setPassword(passwordEncoder.encode(body.newPassword));
             }
             userRepository.save(user);
@@ -132,7 +132,7 @@ public class UserService implements UserDetailsService {
         return Optional.empty();
     }
 
-    public boolean adminAcceptHotel(int id){
+    public boolean adminAcceptHotel(int id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
@@ -166,5 +166,14 @@ public class UserService implements UserDetailsService {
             return true;
         }
         return false;
+    }
+
+    public int checkHotelId(int userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            return user.getHotelId() ;
+        }
+        return 0;
     }
 }

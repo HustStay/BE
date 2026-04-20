@@ -139,9 +139,18 @@ public class BookingService implements IBookingService {
     }
 
     @Override
-    public List<Books> getBookingsByHotelId(int ownerId) {
-        Map<String, Object> response = hotelServiceClient.checkHotelId(ownerId);
-        Object hotelIdValue = response != null ? response.get("hotelId") : null;
+    public List<Books> getBookingsByHotelId(int ownerId,int role) {
+        Object hotelIdValue = null;
+
+        if(role == 2) {
+            Map<String, Object> response = hotelServiceClient.checkHotelId(ownerId);
+            hotelIdValue = response != null ? response.get("hotelId") : null;
+        }
+        
+        if (role == 4){
+            Map<String, Object> response = userServiceClient.getHotelId(ownerId);
+            hotelIdValue = response != null ? response.get("hotelId") : null;
+        }
         if (!(hotelIdValue instanceof Number)) {
             return new ArrayList<>();
         }
