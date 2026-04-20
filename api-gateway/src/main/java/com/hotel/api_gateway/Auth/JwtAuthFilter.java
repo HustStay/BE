@@ -41,9 +41,14 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                     List<String> roles = (List<String>) claims.get("authorities");
 
                     ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                            .header("X-Auth-Username", username)
-                            .header("X-Auth-Roles", String.join(",", roles))
-                            .header("X-Auth-UserId", String.valueOf(userId))
+                            .headers(headers -> {
+                                headers.remove("X-Auth-Username");
+                                headers.remove("X-Auth-Roles");
+                                headers.remove("X-Auth-UserId");
+                                headers.add("X-Auth-Username", username);
+                                headers.add("X-Auth-Roles", String.join(",", roles));
+                                headers.add("X-Auth-UserId", String.valueOf(userId));
+                            })
                             .build();
 
                     return chain.filter(exchange.mutate().request(mutatedRequest).build());
@@ -73,9 +78,14 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         List<String> roles = (List<String>) claims.get("authorities");
 
         ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                .header("X-Auth-Username", username)
-                .header("X-Auth-Roles", String.join(",", roles))
-                .header("X-Auth-UserId", String.valueOf(userId))
+                .headers(headers -> {
+                    headers.remove("X-Auth-Username");
+                    headers.remove("X-Auth-Roles");
+                    headers.remove("X-Auth-UserId");
+                    headers.add("X-Auth-Username", username);
+                    headers.add("X-Auth-Roles", String.join(",", roles));
+                    headers.add("X-Auth-UserId", String.valueOf(userId));
+                })
                 .build();
 
         return chain.filter(exchange.mutate().request(mutatedRequest).build());

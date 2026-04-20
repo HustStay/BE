@@ -54,4 +54,7 @@ public class User {
 
     @Column(name = "is_active", nullable = true)
     private boolean is_active;
+
+    @Column(name = "hotel_id", nullable = true)
+    private Integer hotelId;
 }
