@@ -95,7 +95,7 @@ public class BookingService implements IBookingService {
                     .checkInDate(booking.getCheckInDate())
                     .checkOutDate(booking.getCheckOutDate())
                     .guests(booking.getGuests())
-                    .status(booking.getBookingType().name())
+                    .status(resolveStatus(booking.getBookingType()))
                     .build();
             books.add(bookingResponse);
         }
@@ -186,7 +186,7 @@ public class BookingService implements IBookingService {
                     .checkInDate(booking.getCheckInDate())
                     .checkOutDate(booking.getCheckOutDate())
                     .guestCount(booking.getGuests())
-                    .status(booking.getBookingType().name())
+                    .status(resolveStatus(booking.getBookingType()))
                     .totalRooms(booking.getTotalRoom())
                     .roomType(booking.getRoomType())
                     .fee(booking.getFee())
@@ -194,6 +194,16 @@ public class BookingService implements IBookingService {
             bookingsResponse.add(book);
         }
         return bookingsResponse;
+    }
+
+    private String resolveStatus(BookingType bookingType) {
+        if (bookingType == null) {
+            return "UNKNOWN";
+        }
+        if (bookingType == BookingType.CHECKED_OUT) {
+            return BookingType.COMPLETED.name();
+        }
+        return bookingType.name();
     }
 
     @Override
