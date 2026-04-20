@@ -141,14 +141,35 @@ public class BookingService implements IBookingService {
     @Override
     public List<Books> getBookingsByHotelId(int ownerId) {
         Map<String, Object> response = hotelServiceClient.checkHotelId(ownerId);
-        int hotelId = (int) response.get("hotelId");
+        Object hotelIdValue = response != null ? response.get("hotelId") : null;
+        if (!(hotelIdValue instanceof Number)) {
+            return new ArrayList<>();
+        }
+        int hotelId = ((Number) hotelIdValue).intValue();
+        if (hotelId <= 0) {
+            return new ArrayList<>();
+        }
 
         List<Booking> bookings = bookingRepository.findByHotelId(hotelId);
         List<Books> bookingsResponse = new ArrayList<>();
         for (Booking booking : bookings){
-            Map<String,Object> userResponse = userServiceClient.Customer(booking.getCustomerId());
-            String customerName = (String) userResponse.get("fullName");
-            String phone = (String) userResponse.get("phone");
+            String customerName = "Unknown";
+            String phone = "";
+            try {
+                Map<String,Object> userResponse = userServiceClient.Customer(booking.getCustomerId());
+                if (userResponse != null) {
+                    Object fullNameValue = userResponse.get("fullName");
+                    Object phoneValue = userResponse.get("phone");
+                    if (fullNameValue != null) {
+                        customerName = String.valueOf(fullNameValue);
+                    }
+                    if (phoneValue != null) {
+                        phone = String.valueOf(phoneValue);
+                    }
+                }
+            } catch (Exception ignored) {
+                // Keep fallback values so one broken user record does not fail the whole list.
+            }
             Books book = Books.builder()
                     .id(booking.getId())
                     .customerName(customerName)

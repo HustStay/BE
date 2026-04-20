@@ -29,8 +29,8 @@ public class BookingController {
     public ResponseEntity<Map<String,Object>> booking(@RequestHeader("X-Auth-UserId") String userIdStr,
                                                       @RequestBody AddBooking booking) {
         Map<String,Object> response = new HashMap<>();
-        int customerId = Integer.parseInt(userIdStr);
         try {
+            int customerId = Integer.parseInt(userIdStr);
             // Only send Kafka message if KafkaTemplate is available
             if (kafkaTemplate != null) {
                 // Tạo booking event để gửi qua Kafka
@@ -56,7 +56,10 @@ public class BookingController {
                 response.put("message","Booking failed");
             }
             return ResponseEntity.ok(response);
-        }catch(Exception e){
+        } catch (NumberFormatException e) {
+            response.put("message", "Invalid X-Auth-UserId");
+            return ResponseEntity.badRequest().body(response);
+        } catch(Exception e){
             response.put("message","Error occurred during booking");
             return ResponseEntity.internalServerError().body(response);
         }
@@ -65,8 +68,8 @@ public class BookingController {
     @GetMapping("/bookings")
     public ResponseEntity<Map<String,Object>> getBookingsByCustomerId(@RequestHeader("X-Auth-UserId") String userIdStr) {
         Map<String, Object> response = new HashMap<>();
-        int customerId = Integer.parseInt(userIdStr);
         try {
+            int customerId = Integer.parseInt(userIdStr);
             var bookings = bookingService.getBookingsByCustomerId(customerId);
             if (bookings != null && !bookings.isEmpty()) {
                 response.put("message", "Get bookings successfully");
@@ -75,6 +78,9 @@ public class BookingController {
                 response.put("message", "No bookings found");
             }
             return ResponseEntity.ok(response);
+        } catch (NumberFormatException e) {
+            response.put("message", "Invalid X-Auth-UserId");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("message", "Error occurred while retrieving bookings");
             return ResponseEntity.internalServerError().body(response);
@@ -119,8 +125,8 @@ public class BookingController {
     @GetMapping("/owner/bookings" )
     public ResponseEntity<Map<String,Object>> getBookingsByHotelOwnerId(@RequestHeader("X-Auth-UserId") String userIdStr) {
         Map<String, Object> response = new HashMap<>();
-        int ownerId = Integer.parseInt(userIdStr);
         try {
+            int ownerId = Integer.parseInt(userIdStr);
             var bookings = bookingService.getBookingsByHotelId(ownerId);
             if (bookings != null && !bookings.isEmpty()) {
                 response.put("message", "Get bookings successfully");
@@ -129,6 +135,9 @@ public class BookingController {
                 response.put("message", "No bookings found");
             }
             return ResponseEntity.ok(response);
+        } catch (NumberFormatException e) {
+            response.put("message", "Invalid X-Auth-UserId");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("message", "Error occurred while retrieving bookings");
             return ResponseEntity.internalServerError().body(response);
