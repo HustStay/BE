@@ -135,7 +135,7 @@ public class BookingController {
             }
             return ResponseEntity.ok(response);
         } catch (NumberFormatException e) {
-            response.put("message", "Invalid X-Auth-UserId");
+            response.put("message", "Invalid hotelId");
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("message", "Error occurred while retrieving bookings");
