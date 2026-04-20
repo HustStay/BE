@@ -4,5 +4,6 @@ public enum BookingType {
     CONFIRMED,
     CANCELLED,
     COMPLETED,
+    CHECKED_OUT,
     CHECKED_IN
 }

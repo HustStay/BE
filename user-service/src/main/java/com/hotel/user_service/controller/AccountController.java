@@ -170,6 +170,7 @@ public class AccountController {
             return ResponseEntity.badRequest().build();
         }
     }
+    
 
     @PutMapping("/lockAccount")
     public ResponseEntity<Map<String,Object>> lockAccount(@RequestBody AccountActive request) {
