@@ -124,11 +124,10 @@ public class BookingController {
 
     @GetMapping("/owner/bookings" )
     public ResponseEntity<Map<String,Object>> getBookingsByHotelOwnerId(@RequestHeader("X-Auth-UserId") String userIdStr,
-                                                                        @RequestHeader("X-Auth-Role") String roleStr) {
+                                                                        @RequestParam("roleId") int role) {
         Map<String, Object> response = new HashMap<>();
         try {
             int ownerId = Integer.parseInt(userIdStr);
-            int role = Integer.parseInt(roleStr);
             var bookings = bookingService.getBookingsByHotelId(ownerId,role);
             if (bookings != null && !bookings.isEmpty()) {
                 response.put("message", "Get bookings successfully");
