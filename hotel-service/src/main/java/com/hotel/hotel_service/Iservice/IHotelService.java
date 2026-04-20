@@ -11,6 +11,7 @@ public interface IHotelService {
     List<Hotels> getFamousHotels();
     List<Hotels> getAllHotels();
     HotelDetail getHotelDetail(int hotelId);
+
 //    List<Hotels> getHotelsSearch(SearchHotel searchHotel);
     List<SearchHotelResult> searchHotels(SearchHotel searchHotel);
     // Booking service call
@@ -21,4 +22,7 @@ public interface IHotelService {
 
     // Review service call
     int getOwnerIdByHotelId(int hotelId);
+
+    //Hotel call
+    int getHotelId(int ownerId, int role);
 }
