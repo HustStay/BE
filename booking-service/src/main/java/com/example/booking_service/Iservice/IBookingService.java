@@ -13,6 +13,6 @@ public interface IBookingService {
     List<Bookings> getBookingsByCustomerId(int customerId);
     int getBookedRooms(int hotelId, String checkInDate, String checkOutDate);
     boolean updateBookingStatus(Update update);
-    List<Books> getBookingsByHotelId(int ownerId, int role);
+    List<Books> getBookingsByHotelId(int hotelId);
     boolean checkIntOutHotel(CheckInCheckOut checkInCheckOut);
 }

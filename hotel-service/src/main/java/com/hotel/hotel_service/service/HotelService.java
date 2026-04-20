@@ -3,6 +3,7 @@ package com.hotel.hotel_service.service;
 import com.hotel.hotel_service.Iservice.IHotelService;
 import com.hotel.hotel_service.client.ReviewServiceClient;
 import com.hotel.hotel_service.client.RoomServiceClient;
+import com.hotel.hotel_service.client.UserServiceClient;
 import com.hotel.hotel_service.dto.request.SearchHotel;
 import com.hotel.hotel_service.dto.response.HotelDetail;
 import com.hotel.hotel_service.dto.response.Hotels;
@@ -15,8 +16,11 @@ import com.hotel.hotel_service.repository.AmenityRepository;
 import com.hotel.hotel_service.repository.HomeAmenityRepository;
 import com.hotel.hotel_service.repository.HomeImageRepository;
 import com.hotel.hotel_service.repository.HomeRepository;
+import com.netflix.discovery.converters.Auto;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,6 +42,8 @@ public class HotelService implements IHotelService {
     private HomeImageRepository homeImageRepository;
     @Autowired
     private RoomServiceClient roomServiceClient;
+    @Autowired
+    private UserServiceClient userServiceClient;
 
     @Override
     public List<Hotels> getFamousHotels() {
@@ -322,6 +328,24 @@ public class HotelService implements IHotelService {
             return home.get().getOwnerId();
         }
         return 0;
+    }
+
+    @Override
+    public int getHotelId(int ownerId, int role) {
+        if (role == 2) {
+            Optional<Home> home = homeRepository.findByOwnerId(ownerId);
+            if (home.isPresent()) {
+                return home.get().getId();
+            }
+        }
+        if(role == 4 || role == 5) {
+            Map<String, Object> response = userServiceClient.getHotelId(ownerId);
+            if (response != null && response.containsKey("hotelId")) {
+                return ((Number) response.get("hotelId")).intValue();
+            }
+        }
+        return 0;
+
     }
 
 

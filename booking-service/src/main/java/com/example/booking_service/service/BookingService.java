@@ -139,25 +139,25 @@ public class BookingService implements IBookingService {
     }
 
     @Override
-    public List<Books> getBookingsByHotelId(int ownerId,int role) {
-        Object hotelIdValue = null;
+    public List<Books> getBookingsByHotelId(int hotelId) {
+        // Object hotelIdValue = null;
 
-        if(role == 2) {
-            Map<String, Object> response = hotelServiceClient.checkHotelId(ownerId);
-            hotelIdValue = response != null ? response.get("hotelId") : null;
-        }
+        // if(role == 2) {
+        //     Map<String, Object> response = hotelServiceClient.checkHotelId(ownerId);
+        //     hotelIdValue = response != null ? response.get("hotelId") : null;
+        // }
         
-        if (role == 4){
-            Map<String, Object> response = userServiceClient.getHotelId(ownerId);
-            hotelIdValue = response != null ? response.get("hotelId") : null;
-        }
-        if (!(hotelIdValue instanceof Number)) {
-            return new ArrayList<>();
-        }
-        int hotelId = ((Number) hotelIdValue).intValue();
-        if (hotelId <= 0) {
-            return new ArrayList<>();
-        }
+        // if (role == 4){
+        //     Map<String, Object> response = userServiceClient.getHotelId(ownerId);
+        //     hotelIdValue = response != null ? response.get("hotelId") : null;
+        // }
+        // if (!(hotelIdValue instanceof Number)) {
+        //     return new ArrayList<>();
+        // }
+        // int hotelId = ((Number) hotelIdValue).intValue();
+        // if (hotelId <= 0) {
+        //     return new ArrayList<>();
+        // }
 
         List<Booking> bookings = bookingRepository.findByHotelId(hotelId);
         List<Books> bookingsResponse = new ArrayList<>();

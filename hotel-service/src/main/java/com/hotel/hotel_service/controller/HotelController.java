@@ -4,6 +4,8 @@ import com.hotel.hotel_service.dto.request.SearchHotel;
 import com.hotel.hotel_service.dto.response.Hotels;
 import com.hotel.hotel_service.dto.response.SearchHotelResult;
 import com.hotel.hotel_service.service.HotelService;
+
+import feign.Param;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @RestController
 @RequestMapping
@@ -142,4 +145,19 @@ public class HotelController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
+
+    @GetMapping("/login-hotelId")
+    public  ResponseEntity<Map<String, Object>> getHotelId(@RequestParam("userId") int userId,
+                                                           @Param("role") Integer role) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            int hotelId = hotelService.getHotelId(userId, role);
+            response.put("hotelId", hotelId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi khi lấy hotelId từ userId");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
 }
