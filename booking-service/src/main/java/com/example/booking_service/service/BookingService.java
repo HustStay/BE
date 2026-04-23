@@ -20,12 +20,16 @@ import org.springframework.stereotype.Service;
 import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class BookingService implements IBookingService {
+    private static final long DUPLICATE_WINDOW_SECONDS = 15;
+
     @Autowired
     private HotelServiceClient hotelServiceClient;
     @Autowired
@@ -35,6 +39,10 @@ public class BookingService implements IBookingService {
 
     @Override
     public Integer addBooking(int customerId, AddBooking addBooking) {
+        if (addBooking == null) {
+            return null;
+        }
+
         Map<String, Object> response = hotelServiceClient.checkHotelExists(addBooking.hotelId);
         boolean hotelExists = (boolean) response.get("exists");
         if (!hotelExists) {
@@ -45,10 +53,23 @@ public class BookingService implements IBookingService {
             return null;
         }
 
+        Map<BookingItemKey, Integer> normalizedItems = normalizeBookingItems(addBooking.bookingItems);
+        if (normalizedItems.isEmpty()) {
+            return null;
+        }
+
+        LocalDateTime createdAt = LocalDateTime.now();
+        Integer duplicatedBookingId = findDuplicatedBookingId(customerId, addBooking, normalizedItems, createdAt);
+        if (duplicatedBookingId != null) {
+            return duplicatedBookingId;
+        }
+
         List<Booking> bookings = new ArrayList<>();
 
-        for (AddBookingItem item : addBooking.bookingItems) {
-            float totalFee = item.fee * item.totalRoom;
+        for (Map.Entry<BookingItemKey, Integer> entry : normalizedItems.entrySet()) {
+            BookingItemKey item = entry.getKey();
+            int totalRoom = entry.getValue();
+            float totalFee = item.unitFee() * totalRoom;
 
             Booking booking = Booking.builder()
                     .customerId(customerId)
@@ -57,10 +78,10 @@ public class BookingService implements IBookingService {
                     .checkOutDate(addBooking.checkOutDate)
                     .guests(addBooking.guests)
                     .bookingType(addBooking.bookingType)
-                    .roomType(item.roomType)
-                    .totalRoom(item.totalRoom)
+                    .roomType(item.roomType())
+                    .totalRoom(totalRoom)
                     .fee(totalFee)
-                    .createdAt(LocalDateTime.now())
+                    .createdAt(createdAt)
                     .build();
 
             bookings.add(booking);
@@ -71,6 +92,66 @@ public class BookingService implements IBookingService {
         }
         return savedBookings.get(0).getId();
     }
+
+    private Integer findDuplicatedBookingId(
+            int customerId,
+            AddBooking addBooking,
+            Map<BookingItemKey, Integer> normalizedItems,
+            LocalDateTime now
+    ) {
+        List<Booking> recentBookings = bookingRepository.findRecentSameRequestBookings(
+                customerId,
+                addBooking.hotelId,
+                addBooking.checkInDate,
+                addBooking.checkOutDate,
+                addBooking.guests,
+                addBooking.bookingType,
+                now.minusSeconds(DUPLICATE_WINDOW_SECONDS)
+        );
+
+        if (recentBookings.isEmpty()) {
+            return null;
+        }
+
+        Map<String, Integer> minimumIdByItem = new HashMap<>();
+        for (Booking booking : recentBookings) {
+            String itemKey = toSavedItemKey(booking.getRoomType(), booking.getTotalRoom(), booking.getFee());
+            minimumIdByItem.merge(itemKey, booking.getId(), Math::min);
+        }
+
+        Integer duplicatedBookingId = null;
+        for (Map.Entry<BookingItemKey, Integer> entry : normalizedItems.entrySet()) {
+            BookingItemKey item = entry.getKey();
+            int totalRoom = entry.getValue();
+            float totalFee = item.unitFee() * totalRoom;
+            String expectedItemKey = toSavedItemKey(item.roomType(), totalRoom, totalFee);
+            Integer itemId = minimumIdByItem.get(expectedItemKey);
+            if (itemId == null) {
+                return null;
+            }
+            duplicatedBookingId = duplicatedBookingId == null ? itemId : Math.min(duplicatedBookingId, itemId);
+        }
+
+        return duplicatedBookingId;
+    }
+
+    private Map<BookingItemKey, Integer> normalizeBookingItems(List<AddBookingItem> bookingItems) {
+        Map<BookingItemKey, Integer> normalized = new LinkedHashMap<>();
+        for (AddBookingItem item : bookingItems) {
+            if (item == null || item.totalRoom <= 0 || item.roomType == null || item.roomType.isBlank()) {
+                continue;
+            }
+            BookingItemKey key = new BookingItemKey(item.roomType.trim(), item.fee);
+            normalized.merge(key, item.totalRoom, Integer::sum);
+        }
+        return normalized;
+    }
+
+    private String toSavedItemKey(String roomType, int totalRoom, float totalFee) {
+        return roomType + "|" + totalRoom + "|" + Float.floatToIntBits(totalFee);
+    }
+
+    private record BookingItemKey(String roomType, float unitFee) {}
 
     @Override
     public List<Bookings> getBookingsByCustomerId(int customerId) {
@@ -140,31 +221,11 @@ public class BookingService implements IBookingService {
 
     @Override
     public List<Books> getBookingsByHotelId(int hotelId) {
-        // Object hotelIdValue = null;
-
-        // if(role == 2) {
-        //     Map<String, Object> response = hotelServiceClient.checkHotelId(ownerId);
-        //     hotelIdValue = response != null ? response.get("hotelId") : null;
-        // }
-        
-        // if (role == 4){
-        //     Map<String, Object> response = userServiceClient.getHotelId(ownerId);
-        //     hotelIdValue = response != null ? response.get("hotelId") : null;
-        // }
-        // if (!(hotelIdValue instanceof Number)) {
-        //     return new ArrayList<>();
-        // }
-        // int hotelId = ((Number) hotelIdValue).intValue();
-        // if (hotelId <= 0) {
-        //     return new ArrayList<>();
-        // }
-
         List<Booking> bookings = bookingRepository.findByHotelId(hotelId);
         List<Books> bookingsResponse = new ArrayList<>();
         for (Booking booking : bookings){
             String customerName = "Unknown";
             String phone = "";
-            try {
                 Map<String,Object> userResponse = userServiceClient.Customer(booking.getCustomerId());
                 if (userResponse != null) {
                     Object fullNameValue = userResponse.get("fullName");
@@ -176,9 +237,6 @@ public class BookingService implements IBookingService {
                         phone = String.valueOf(phoneValue);
                     }
                 }
-            } catch (Exception ignored) {
-                // Keep fallback values so one broken user record does not fail the whole list.
-            }
             Books book = Books.builder()
                     .id(booking.getId())
                     .customerName(customerName)
