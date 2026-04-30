@@ -5,6 +5,7 @@ import com.hotel.user_service.dto.request.AccountActive;
 import com.hotel.user_service.dto.request.LoginRequest;
 import com.hotel.user_service.dto.request.RegisterRequest;
 import com.hotel.user_service.dto.request.UpdatePassword;
+import com.hotel.user_service.dto.request.UpdateRoleRequest;
 import com.hotel.user_service.dto.response.Customer;
 import com.hotel.user_service.model.User;
 import com.hotel.user_service.repository.UserRepository;
@@ -201,4 +202,53 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
     
+    @GetMapping("/accountsByHotel")
+    public ResponseEntity<Map<String, Object>> getAccountsByHotel(@RequestParam("hotelId") int hotelId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            var accountsList = userService.getAccountsByHotel(hotelId);
+            if (accountsList.isEmpty()) {
+                response.put("message", "No accounts found for this hotel");
+            } else {
+                response.put("accounts", accountsList);
+                response.put("message", "Accounts retrieved successfully");
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/addAccountHotel")
+    public ResponseEntity<Map<String, Object>> addAccountHotel(@RequestParam("hotelId") int hotelId,
+                                                               @RequestBody RegisterRequest body) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean check = userService.addAccountHotel(body, hotelId);
+            if (check) {
+                response.put("message", "Account added successfully");
+            } else {
+                response.put("message", "Username already exists");
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/updateRole")
+    public ResponseEntity<Map<String, Object>> updateRole(@RequestBody UpdateRoleRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean check = userService.updateRole(request);
+            if (check) {
+                response.put("message", "Update role successfully");
+            } else {
+                response.put("message", "Update role failed");
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
