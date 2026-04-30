@@ -3,6 +3,7 @@ package com.hotel.user_service.service;
 import com.hotel.user_service.dto.request.AccountActive;
 import com.hotel.user_service.dto.request.RegisterRequest;
 import com.hotel.user_service.dto.request.UpdatePassword;
+import com.hotel.user_service.dto.request.UpdateRoleRequest;
 import com.hotel.user_service.dto.response.Accounts;
 import com.hotel.user_service.dto.response.Customer;
 import com.hotel.user_service.dto.response.Profile;
@@ -175,5 +176,57 @@ public class UserService implements UserDetailsService {
             return user.getHotelId() ;
         }
         return 0;
+    }
+
+    public List<Accounts> getAccountsByHotel(int hotelId) {
+        List<User> users = userRepository.findByHotelId(hotelId);
+        return users.stream().map(user -> {
+            Accounts account = new Accounts();
+            account.id = user.getId();
+            account.username = user.getUsername();
+            account.fullName = user.getFull_name();
+            account.email = user.getEmail();
+            account.role = user.getRole().getName();
+            account.active = user.is_active();
+            return account;
+        }).toList();
+    }
+
+    public boolean addAccountHotel(RegisterRequest request, int hotelId) {
+        Optional<User> userOptional = userRepository.findByUsername(request.username);
+        if (userOptional.isPresent()) {
+            return false;
+        }
+
+        Role roles = roleRepository.findById(request.role);
+        User user = User.builder()
+                .full_name(request.fullName)
+                .password(passwordEncoder.encode(request.password))
+                .username(request.username)
+                .role(roles)
+                .email(request.email)
+                .phone(request.phone)
+                .birth(request.birth)
+                .address(request.address)
+                .is_active(true)
+                .created_at(LocalDateTime.now())
+                .hotelId(hotelId)
+                .build();
+        userRepository.save(user);
+        return true;
+    }
+
+    public boolean updateRole(UpdateRoleRequest request) {
+        Optional<User> userOptional = userRepository.findById(request.userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            Role newRole = roleRepository.findById(request.roleId);
+            if (newRole != null) {
+                user.setRole(newRole);
+                userRepository.save(user);
+                return true;
+            }
+        }
+        return false;
     }
 }
