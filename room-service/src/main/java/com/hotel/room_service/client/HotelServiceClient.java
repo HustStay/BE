@@ -9,5 +9,5 @@ import java.util.Map;
 @FeignClient(name = "hotel-service", url = "${HOTEL_SERVICE_URL:}")
 public interface HotelServiceClient {
     @GetMapping("/hotelId")
-    Map<String, Object> checkHotelId(@RequestParam("userId") int userId);
+    Map<String, Object> checkHotelId(@RequestParam("ownerId") int userId);
 }
