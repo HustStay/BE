@@ -214,14 +214,7 @@ public class RoomService implements IRoomService {
     @Override
     public List<Rooms> getAllRooms(int userId) {
         Map<String, Object> response = hotelServiceClient.checkHotelId(userId);
-        Object hotelIdObj = response.get("hotelId");
-        if (hotelIdObj == null) {
-            throw new RuntimeException("Lỗi khi lấy hotelId từ userId");
-        }
-        int hotelId = ((Number) hotelIdObj).intValue();
-        if (hotelId == 0) {
-            throw new RuntimeException("Lỗi khi lấy hotelId từ userId");
-        }
+        int hotelId = (int) response.get("hotelId");
         List<Room> roomList = roomRepository.findByHotelid(hotelId);
         List<Rooms> roomsResponse = new ArrayList<>();
         for (Room room : roomList) {
