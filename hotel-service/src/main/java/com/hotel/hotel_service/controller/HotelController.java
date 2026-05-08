@@ -63,6 +63,23 @@ public class HotelController {
         }
     }
 
+    @GetMapping("/hotel-profile")
+    public ResponseEntity<Map<String, Object>> getHotelProfile(@RequestParam("hotelId") int hotelId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            var hotelProfile = hotelService.getHotelProfile(hotelId);
+            if (hotelProfile != null) {
+                response.put("hotelProfile", hotelProfile);
+            } else {
+                response.put("message", "Không tìm thấy chi tiết khách sạn");
+            }
+            return ResponseEntity.ok(response);
+        }catch (Exception e){
+            response.put("message", "Lỗi khi lấy chi tiết khách sạn");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
     @PostMapping("/hotels/search")
     public ResponseEntity<Map<String, Object>> searchHotels(@RequestBody SearchHotel searchHotel) {
         Map<String, Object> response = new HashMap<>();

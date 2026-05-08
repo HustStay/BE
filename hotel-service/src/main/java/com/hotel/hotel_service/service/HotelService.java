@@ -6,6 +6,7 @@ import com.hotel.hotel_service.client.RoomServiceClient;
 import com.hotel.hotel_service.client.UserServiceClient;
 import com.hotel.hotel_service.dto.request.SearchHotel;
 import com.hotel.hotel_service.dto.response.HotelDetail;
+import com.hotel.hotel_service.dto.response.HotelProfile;
 import com.hotel.hotel_service.dto.response.Hotels;
 import com.hotel.hotel_service.dto.response.SearchHotelResult;
 import com.hotel.hotel_service.model.Amenities;
@@ -182,6 +183,43 @@ public class HotelService implements IHotelService {
             hotelDetail.imageUrl = String.join(", ", images);
 
             return hotelDetail;
+        }
+        return null;
+    }
+
+    @Override
+    public HotelProfile getHotelProfile(int hotelId) {
+        Optional<Home> hotelOptional = homeRepository.findById(hotelId);
+        if (hotelOptional.isPresent()) {
+            HotelProfile profile = new HotelProfile();
+            Home home = hotelOptional.get();
+            profile.hotelName = home.getHome_name();
+            profile.street = home.getStreet();
+            profile.district = home.getDistrict();
+            profile.city = home.getCity();
+            profile.country = home.getCountry();
+            profile.description = home.getDescription();
+
+            List<String> amenitiesList = new ArrayList<>();
+            List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(hotelId);
+            for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
+                List<Amenities> amenities = amenityRepository.findAnimitiesById(homeAmeneties.getAmenity().getId());
+                for (Amenities amenity : amenities) {
+                    amenitiesList.add(amenity.getAmenity_name());
+                }
+            }
+            profile.aminities = amenitiesList;
+
+            List<String> images = new ArrayList<>();
+            List<HomeImage> homeImages = homeImageRepository.findHomeImageByHome_Id(hotelId);
+            for (HomeImage homeImage : homeImages) {
+                if(homeImage.getImageUrl() != null) {
+                    images.add(homeImage.getImageUrl());
+                }
+            }
+            profile.imageUrl = images;
+
+            return profile;
         }
         return null;
     }
