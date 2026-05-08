@@ -161,6 +161,23 @@ public class RoomService implements IRoomService {
         }
 
         roomRepository.save(room);
+
+        if (updateRoom.amenities != null) {
+            List<RoomAmenity> oldAmenities = roomAmenityRepository.findByRoom_Id(updateRoom.roomId);
+            roomAmenityRepository.deleteAll(oldAmenities);
+
+            List<RoomAmenity> newAmenities = new ArrayList<>();
+            for (String amenityName : updateRoom.amenities) {
+                RoomAmenity amenity = new RoomAmenity();
+                amenity.setRoom(room);
+                amenity.setAmenityName(amenityName);
+                amenity.setActive(true);
+                amenity.setCreatedAt(LocalDateTime.now());
+                newAmenities.add(amenity);
+            }
+            roomAmenityRepository.saveAll(newAmenities);
+        }
+
         return true;
     }
 
