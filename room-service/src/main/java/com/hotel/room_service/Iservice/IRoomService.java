@@ -16,4 +16,5 @@ public interface IRoomService {
     Boolean addRoom(AddRoom addRoom);
     Boolean activeRoom(UpdateActive updateActive);
     List<Rooms> getAllRooms(int userId);
+    Rooms getRoomDetail(int roomId);
 }
