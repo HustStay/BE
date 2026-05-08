@@ -129,4 +129,22 @@ public class RoomController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
+
+    @GetMapping("/room-detail")
+    public ResponseEntity<Map<String, Object>> getRoomDetail(@RequestParam("roomId") int roomId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Rooms roomDetail = roomService.getRoomDetail(roomId);
+            if (roomDetail != null) {
+                response.put("roomDetail", roomDetail);
+                response.put("message", "Lấy thông tin phòng thành công");
+            } else {
+                response.put("message", "Không tìm thấy phòng");
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi khi lấy thông tin phòng");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
 }

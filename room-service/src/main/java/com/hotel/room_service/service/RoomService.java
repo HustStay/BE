@@ -231,4 +231,32 @@ public class RoomService implements IRoomService {
         }
         return roomsResponse;
     }
+
+    @Override
+    public Rooms getRoomDetail(int roomId) {
+        Optional<Room> roomOptional = roomRepository.findById(roomId);
+        if (roomOptional.isPresent()) {
+            Room room = roomOptional.get();
+            Rooms roomDto = new Rooms();
+            roomDto.roomId = room.getId();
+            roomDto.roomNumber = room.getRoomNumber();
+            roomDto.roomType = room.getRoomType();
+            roomDto.pricePerNight = room.getPrice_per_night();
+            roomDto.capacity = room.getCapacity();
+            roomDto.description = room.getDescription();
+            roomDto.isAvailable = room.isAvailable();
+            roomDto.isActive = room.isActive();
+
+            List<RoomAmenity> amenities = roomAmenityRepository.findByRoom_Id(roomId);
+            if (amenities != null && !amenities.isEmpty()) {
+                String amenityNames = amenities.stream()
+                        .map(RoomAmenity::getAmenityName)
+                        .collect(Collectors.joining(", "));
+                roomDto.amenities = amenityNames;
+            }
+
+            return roomDto;
+        }
+        return null;
+    }
 }
