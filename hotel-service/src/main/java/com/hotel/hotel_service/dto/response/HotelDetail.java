@@ -9,4 +9,5 @@ public class HotelDetail {
     public double rating;
     public String aminities;
     public String imageUrl;
+    public String description;
 }
