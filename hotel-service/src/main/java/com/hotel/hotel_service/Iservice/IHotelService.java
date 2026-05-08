@@ -2,6 +2,7 @@ package com.hotel.hotel_service.Iservice;
 
 import com.hotel.hotel_service.dto.request.SearchHotel;
 import com.hotel.hotel_service.dto.response.HotelDetail;
+import com.hotel.hotel_service.dto.response.HotelProfile;
 import com.hotel.hotel_service.dto.response.Hotels;
 import com.hotel.hotel_service.dto.response.SearchHotelResult;
 
@@ -11,6 +12,7 @@ public interface IHotelService {
     List<Hotels> getFamousHotels();
     List<Hotels> getAllHotels();
     HotelDetail getHotelDetail(int hotelId);
+    HotelProfile getHotelProfile(int hotelId);
 
 //    List<Hotels> getHotelsSearch(SearchHotel searchHotel);
     List<SearchHotelResult> searchHotels(SearchHotel searchHotel);
