@@ -1,6 +1,7 @@
 package com.hotel.hotel_service.controller;
 
 import com.hotel.hotel_service.dto.request.SearchHotel;
+import com.hotel.hotel_service.dto.request.UpdateHotelProfileRequest;
 import com.hotel.hotel_service.dto.response.Hotels;
 import com.hotel.hotel_service.dto.response.SearchHotelResult;
 import com.hotel.hotel_service.service.HotelService;
@@ -76,6 +77,19 @@ public class HotelController {
             return ResponseEntity.ok(response);
         }catch (Exception e){
             response.put("message", "Lỗi khi lấy chi tiết khách sạn");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @PutMapping("/hotel-profile")
+    public ResponseEntity<Map<String, Object>> updateHotelProfile(@RequestParam("hotelId") int hotelId, @RequestBody UpdateHotelProfileRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            hotelService.updateHotelProfile(hotelId, request);
+            response.put("message", "Cập nhật hồ sơ khách sạn thành công");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi khi cập nhật hồ sơ khách sạn: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }

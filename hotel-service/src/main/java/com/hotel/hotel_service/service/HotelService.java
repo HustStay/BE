@@ -5,6 +5,7 @@ import com.hotel.hotel_service.client.ReviewServiceClient;
 import com.hotel.hotel_service.client.RoomServiceClient;
 import com.hotel.hotel_service.client.UserServiceClient;
 import com.hotel.hotel_service.dto.request.SearchHotel;
+import com.hotel.hotel_service.dto.request.UpdateHotelProfileRequest;
 import com.hotel.hotel_service.dto.response.HotelDetail;
 import com.hotel.hotel_service.dto.response.HotelProfile;
 import com.hotel.hotel_service.dto.response.Hotels;
@@ -222,6 +223,56 @@ public class HotelService implements IHotelService {
             return profile;
         }
         return null;
+    }
+
+    @Override
+    public void updateHotelProfile(int hotelId, UpdateHotelProfileRequest request) {
+        Optional<Home> hotelOptional = homeRepository.findById(hotelId);
+        if (hotelOptional.isPresent()) {
+            Home home = hotelOptional.get();
+            // Update basic info
+            home.setHome_name(request.getHotelName());
+            home.setDescription(request.getDescription());
+            home.setStreet(request.getStreet());
+            home.setDistrict(request.getDistrict());
+            home.setCity(request.getCity());
+            home.setCountry(request.getCountry());
+            homeRepository.save(home);
+
+            // Update Amenities
+            List<HomeAmeneties> oldAmenities = homeAmenityRepository.findHomeAmenetiesByHome_Id(hotelId);
+            homeAmenityRepository.deleteAll(oldAmenities);
+
+            if (request.getAmenities() != null) {
+                for (String amenityName : request.getAmenities()) {
+                    Amenities amenity = amenityRepository.findByName(amenityName).orElseGet(() -> {
+                        Amenities newAmenity = new Amenities();
+                        newAmenity.setAmenity_name(amenityName);
+                        newAmenity.setCategory("GENERAL"); // Default category
+                        return amenityRepository.save(newAmenity);
+                    });
+
+                    HomeAmeneties homeAmenity = new HomeAmeneties();
+                    homeAmenity.setHome(home);
+                    homeAmenity.setAmenity(amenity);
+                    homeAmenityRepository.save(homeAmenity);
+                }
+            }
+
+            // Update Images
+            List<HomeImage> oldImages = homeImageRepository.findHomeImageByHome_Id(hotelId);
+            homeImageRepository.deleteAll(oldImages);
+
+            if (request.getImageUrls() != null) {
+                for (String url : request.getImageUrls()) {
+                    HomeImage homeImage = new HomeImage();
+                    homeImage.setHome(home);
+                    homeImage.setImageUrl(url);
+                    homeImage.setCreatedAt(java.time.LocalDateTime.now());
+                    homeImageRepository.save(homeImage);
+                }
+            }
+        }
     }
 
 //    @Override
