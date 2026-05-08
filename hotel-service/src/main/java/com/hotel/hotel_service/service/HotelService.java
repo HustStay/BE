@@ -155,6 +155,7 @@ public class HotelService implements IHotelService {
             hotelDetail.district = home.getDistrict();
             hotelDetail.city = home.getCity();
             hotelDetail.country = home.getCountry();
+            hotelDetail.description = home.getDescription();
 
             List<String> amenitiesList = new ArrayList<>();
             List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(hotelId);
