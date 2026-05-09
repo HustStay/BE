@@ -6,6 +6,7 @@ import com.hotel.hotel_service.dto.response.Hotels;
 import com.hotel.hotel_service.dto.response.SearchHotelResult;
 import com.hotel.hotel_service.service.HotelService;
 
+import feign.Param;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 
 @RestController
 @RequestMapping
@@ -57,7 +57,7 @@ public class HotelController {
                 response.put("message", "Không tìm thấy chi tiết khách sạn");
             }
             return ResponseEntity.ok(response);
-        }catch (Exception e){
+        } catch (Exception e) {
             response.put("message", "Lỗi khi lấy chi tiết khách sạn");
             return ResponseEntity.internalServerError().body(response);
         }
@@ -74,14 +74,15 @@ public class HotelController {
                 response.put("message", "Không tìm thấy chi tiết khách sạn");
             }
             return ResponseEntity.ok(response);
-        }catch (Exception e){
+        } catch (Exception e) {
             response.put("message", "Lỗi khi lấy chi tiết khách sạn");
             return ResponseEntity.internalServerError().body(response);
         }
     }
 
     @PutMapping("/hotel-profile")
-    public ResponseEntity<Map<String, Object>> updateHotelProfile(@RequestParam("hotelId") int hotelId, @RequestBody UpdateHotelProfileRequest request) {
+    public ResponseEntity<Map<String, Object>> updateHotelProfile(@RequestParam("hotelId") int hotelId,
+            @RequestBody UpdateHotelProfileRequest request) {
         Map<String, Object> response = new HashMap<>();
         try {
             hotelService.updateHotelProfile(hotelId, request);
@@ -114,7 +115,7 @@ public class HotelController {
         }
     }
 
-    //Endpoint service call
+    // Endpoint service call
 
     @GetMapping("/hotel_detail")
     public ResponseEntity<Map<String, Object>> getHotelDetails(@RequestParam("hotelId") int hotelId) {
@@ -132,7 +133,7 @@ public class HotelController {
                 response.put("message", "Không tìm thấy chi tiết khách sạn");
             }
             return ResponseEntity.ok(response);
-        }catch (Exception e){
+        } catch (Exception e) {
             response.put("message", "Lỗi khi lấy chi tiết khách sạn");
             return ResponseEntity.internalServerError().body(response);
         }
@@ -147,11 +148,11 @@ public class HotelController {
         } else {
             response.put("exists", false);
         }
-        return  ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/hotelId")
-    public  ResponseEntity<Map<String, Object>> checkHotelId(@RequestParam("userId") int userId) {
+    public ResponseEntity<Map<String, Object>> checkHotelId(@RequestParam("userId") int userId) {
         Map<String, Object> response = new HashMap<>();
         try {
             int hotelId = hotelService.getHotelId(userId);
@@ -177,12 +178,11 @@ public class HotelController {
     }
 
     @GetMapping("/login-hotelId")
-    public  ResponseEntity<Map<String, Object>> getHotelId(@RequestParam("userId") int userId,
-                                                           @RequestParam(value = "role", required = false) Integer role) {
+    public ResponseEntity<Map<String, Object>> getHotelId(@RequestParam("userId") int userId,
+            @Param("role") Integer role) {
         Map<String, Object> response = new HashMap<>();
         try {
-            int validRole = role != null ? role : 0;
-            int hotelId = hotelService.getHotelId(userId, validRole);
+            int hotelId = hotelService.getHotelId(userId, role);
             response.put("hotelId", hotelId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -190,5 +190,5 @@ public class HotelController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-    
+
 }
