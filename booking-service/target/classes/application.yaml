@@ -20,7 +20,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 server:
-  port: ${SERVER_PORT:8084}
+  port: ${PORT:8084}
 
 eureka:
   client:
