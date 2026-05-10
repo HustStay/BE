@@ -192,8 +192,8 @@ public class AccountController {
     @GetMapping("/hotelId")
     public ResponseEntity<Map<String, Object>> getHotelId(@RequestParam ("ownerId") int userId) {
         Map<String, Object> response = new HashMap<>();
-        int hotelId = userService.checkHotelId(userId);
-        if (hotelId != 0) {
+        Integer hotelId = userService.checkHotelId(userId);
+        if (hotelId != null) {
             response.put("message", "User has a hotelId");
             response.put("hotelId", hotelId);
         } else {
