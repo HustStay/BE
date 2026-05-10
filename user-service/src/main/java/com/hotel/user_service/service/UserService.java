@@ -169,11 +169,11 @@ public class UserService implements UserDetailsService {
         return false;
     }
 
-    public int checkHotelId(int userId) {
+    public Integer checkHotelId(int userId) {
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            return user.getHotelId() != null ? user.getHotelId() : 0;
+            return user.getHotelId();
         }
         return 0;
     }

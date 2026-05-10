@@ -428,11 +428,10 @@ public class HotelService implements IHotelService {
                 return home.get().getId();
             }
         }
-        if(role == 4 || role == 5) {
+        else if(role == 4 || role == 5) {
             Map<String, Object> response = userServiceClient.getHotelId(ownerId);
-            if (response != null && response.containsKey("hotelId")) {
-                return ((Number) response.get("hotelId")).intValue();
-            }
+            Integer hotelId = (Integer) response.get("hotelId");
+            return hotelId;
         }
         return 0;
 
