@@ -173,7 +173,7 @@ public class UserService implements UserDetailsService {
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            return user.getHotelId() ;
+            return user.getHotelId() != null ? user.getHotelId() : 0;
         }
         return 0;
     }
