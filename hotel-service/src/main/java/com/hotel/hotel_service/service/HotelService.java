@@ -421,7 +421,7 @@ public class HotelService implements IHotelService {
     }
 
     @Override
-    public int getHotelId(int ownerId, int role) {
+    public int getHotelId(int ownerId, Integer role) {
         if (role == 2) {
             Optional<Home> home = homeRepository.findByOwnerId(ownerId);
             if (home.isPresent()) {

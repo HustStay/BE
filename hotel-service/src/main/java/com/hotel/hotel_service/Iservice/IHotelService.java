@@ -28,5 +28,5 @@ public interface IHotelService {
     int getOwnerIdByHotelId(int hotelId);
 
     //Hotel call
-    int getHotelId(int ownerId, int role);
+    int getHotelId(int ownerId, Integer role);
 }

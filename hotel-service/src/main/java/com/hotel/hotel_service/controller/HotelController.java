@@ -179,7 +179,7 @@ public class HotelController {
 
     @GetMapping("/login-hotelId")
     public ResponseEntity<Map<String, Object>> getHotelId(@RequestParam("userId") int userId,
-            @Param("role") Integer role) {
+            @RequestParam("role") Integer role) {
         Map<String, Object> response = new HashMap<>();
         try {
             int hotelId = hotelService.getHotelId(userId, role);
