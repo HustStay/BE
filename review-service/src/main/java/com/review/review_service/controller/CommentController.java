@@ -119,4 +119,17 @@ public class CommentController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
+
+    @GetMapping("/countComment")
+    public ResponseEntity<Map<String, Object>> countCommentByHotelId(@RequestParam int hotelId){
+        Map<String, Object> response = new HashMap<>();
+        try {
+            int countComment = commentService.countCommentByHotelId(hotelId);
+            response.put("countComment", countComment);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Error occurred while counting comment");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
 }

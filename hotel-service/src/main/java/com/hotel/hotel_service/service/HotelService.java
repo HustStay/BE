@@ -46,6 +46,8 @@ public class HotelService implements IHotelService {
     private RoomServiceClient roomServiceClient;
     @Autowired
     private UserServiceClient userServiceClient;
+    @Autowired
+    private ReviewServiceClient reviewServiceClient;
 
     @Override
     public List<Hotels> getFamousHotels() {
@@ -65,6 +67,9 @@ public class HotelService implements IHotelService {
             hotelResponse.district = home.getDistrict();
             hotelResponse.city = home.getCity();
             hotelResponse.country = home.getCountry();
+
+            Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
+            hotelResponse.reviewCount = (int) countResponse.get("countComment");
 
             List<String> amenitiesList = new ArrayList<>();
             List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());
@@ -113,6 +118,9 @@ public class HotelService implements IHotelService {
             hotelResponse.district = home.getDistrict();
             hotelResponse.city = home.getCity();
             hotelResponse.country = home.getCountry();
+
+            Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
+            hotelResponse.reviewCount = (int) countResponse.get("countComment");
 
             List<String> amenitiesList = new ArrayList<>();
             List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());

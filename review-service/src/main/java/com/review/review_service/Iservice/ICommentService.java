@@ -12,4 +12,5 @@ public interface ICommentService {
     List<CommentByHotelId> getCommentsByHotelId(int hotelId);
     List<CommentByHotelId> getAllComments();
     Float getAverageStarByHotelId(int hotelId);
+    int countCommentByHotelId(int hotelId);
 }

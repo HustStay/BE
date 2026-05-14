@@ -144,4 +144,10 @@ public class CommentService implements ICommentService {
         }
         return totalStars / comments.size();
     }
+
+    @Override
+    public int countCommentByHotelId(int hotelId) {
+        List<Comment> comments = commentRepository.findByHotelId(hotelId);
+        return comments.size();
+    }
 }
