@@ -11,5 +11,5 @@ public class Hotels {
     public double pricePerNight;
     public double rating;
     public String aminities;
-    public int reviewCount;
+    public Integer reviewCount;
 }

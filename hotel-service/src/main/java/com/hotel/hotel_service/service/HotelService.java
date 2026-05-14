@@ -69,7 +69,7 @@ public class HotelService implements IHotelService {
             hotelResponse.country = home.getCountry();
 
             Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
-            hotelResponse.reviewCount = (int) countResponse.get("countComment");
+            hotelResponse.reviewCount = (Integer) countResponse.get("countComment");
 
             List<String> amenitiesList = new ArrayList<>();
             List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());
