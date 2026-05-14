@@ -68,13 +68,22 @@ public class HotelService implements IHotelService {
             hotelResponse.city = home.getCity();
             hotelResponse.country = home.getCountry();
 
-            Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
-            hotelResponse.reviewCount = (Integer) countResponse.get("countComment");
+            try {
+                Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
+                Object cnt = countResponse.get("countComment");
+                hotelResponse.reviewCount = cnt != null ? ((Number) cnt).intValue() : 0;
+            } catch (Exception e) {
+                hotelResponse.reviewCount = 0;
+            }
 
             List<String> amenitiesList = new ArrayList<>();
             List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());
             if (homeAmenetiesList.isEmpty()) {
-                return null;
+                hotelResponse.aminities = "";
+                List<HomeImage> homeImages0 = homeImageRepository.findHomeImageByHome_Id(home.getId());
+                hotelResponse.imageUrl = homeImages0.isEmpty() ? "" : homeImages0.get(0).getImageUrl();
+                hotels.add(hotelResponse);
+                continue;
             }
 
             for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
@@ -119,13 +128,22 @@ public class HotelService implements IHotelService {
             hotelResponse.city = home.getCity();
             hotelResponse.country = home.getCountry();
 
-            Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
-            hotelResponse.reviewCount = (int) countResponse.get("countComment");
+            try {
+                Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
+                Object cnt = countResponse.get("countComment");
+                hotelResponse.reviewCount = cnt != null ? ((Number) cnt).intValue() : 0;
+            } catch (Exception e) {
+                hotelResponse.reviewCount = 0;
+            }
 
             List<String> amenitiesList = new ArrayList<>();
             List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());
             if (homeAmenetiesList.isEmpty()) {
-                return null;
+                hotelResponse.aminities = "";
+                List<HomeImage> homeImages0 = homeImageRepository.findHomeImageByHome_Id(home.getId());
+                hotelResponse.imageUrl = homeImages0.isEmpty() ? "" : homeImages0.get(0).getImageUrl();
+                hotels.add(hotelResponse);
+                continue;
             }
 
             for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
