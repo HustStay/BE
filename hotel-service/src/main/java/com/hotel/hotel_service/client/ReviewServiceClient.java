@@ -11,4 +11,7 @@ public interface ReviewServiceClient {
 
     @GetMapping("/averageStar")
     Map<String, Object> getAverageStarByHotelId(@RequestParam int hotelId);
+
+    @GetMapping("/countComment")
+    Map<String, Object> getCountCommentByHotelId(@RequestParam int hotelId);
 }
