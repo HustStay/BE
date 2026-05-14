@@ -148,6 +148,6 @@ public class CommentService implements ICommentService {
     @Override
     public Integer countCommentByHotelId(int hotelId) {
         List<Comment> comments = commentRepository.findByHotelId(hotelId);
-        return comments.isEmpty() ? null : comments.size();
+        return comments.size();
     }
 }
