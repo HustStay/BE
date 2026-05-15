@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
-import vn.payos.model.v2.paymentRequests.PaymentLinkData;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -79,10 +78,12 @@ public class PaymentService implements IPaymentService {
 
             CreatePaymentLinkResponse response = payOS.paymentRequests().create(paymentLinkRequest);
 
-            log.info("PayOS payment link created: checkoutUrl={}, qrCode={}",
-                    response.getCheckoutUrl(), response.getQrCode());
+            // PayOS trả về qrCode (chuỗi EMV) ngay trong response tạo link
+            String qrCode = response.getQrCode();
+            log.info("PayOS payment link created: checkoutUrl={}, hasQrCode={}",
+                    response.getCheckoutUrl(), qrCode != null);
 
-            // Save payment to database
+            // Lưu payment vào DB, bao gồm qrCode để dùng lại sau
             Payment payment = Payment.builder()
                     .bookingId(request.getBookingId())
                     .orderCode(String.valueOf(orderCode))
@@ -91,6 +92,8 @@ public class PaymentService implements IPaymentService {
                     .provider("PAYOS")
                     .transactionId(String.valueOf(response.getPaymentLinkId()))
                     .checkoutUrl(response.getCheckoutUrl())
+                    .qrCode(qrCode)
+                    .description(description)
                     .expiredAt(LocalDateTime.now().plusMinutes(15))
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
@@ -104,8 +107,8 @@ public class PaymentService implements IPaymentService {
                     .bookingId(request.getBookingId())
                     .amount(amount)
                     .status("PENDING")
-                    // Trả thẳng qrCode từ PayOS để frontend render QR
-                    .qrCode(response.getQrCode())
+                    // Trả qrCode về để frontend render QR ngay lập tức
+                    .qrCode(qrCode)
                     .description(description)
                     .build();
 
@@ -124,36 +127,17 @@ public class PaymentService implements IPaymentService {
 
         Payment payment = paymentOpt.get();
 
-        // Gọi PayOS API để lấy thông tin chi tiết, bao gồm qrCode
-        String qrCode = null;
-        String accountName = null;
-        String accountNumber = null;
-        String bankName = null;
-        try {
-            PaymentLinkData linkData = payOS.paymentRequests().getPaymentLinkInformation(orderCode);
-            if (linkData != null) {
-                qrCode = linkData.getQrCode();
-                accountName = linkData.getAccountName();
-                accountNumber = linkData.getAccountNumber();
-                bankName = linkData.getBankName();
-                log.info("PayOS getById - orderCode={}, qrCode exists={}, accountNumber={}, bankName={}",
-                        orderCode, qrCode != null, accountNumber, bankName);
-            }
-        } catch (Exception e) {
-            log.warn("Không thể lấy PaymentLinkData từ PayOS cho orderCode={}: {}", orderCode, e.getMessage());
-        }
-
+        // Lấy qrCode đã lưu từ DB (không cần gọi lại PayOS API)
         return PaymentSessionResponse.builder()
                 .sessionId(payment.getOrderCode())
                 .sessionUrl(payment.getCheckoutUrl())
                 .bookingId(payment.getBookingId())
                 .amount(payment.getAmount())
                 .status(payment.getStatus())
-                .qrCode(qrCode)
-                .accountName(accountName)
-                .accountNumber(accountNumber)
-                .bankName(bankName)
-                .description("BOOKING-" + payment.getBookingId())
+                .qrCode(payment.getQrCode())
+                .description(payment.getDescription() != null
+                        ? payment.getDescription()
+                        : "BOOKING-" + payment.getBookingId())
                 .build();
     }
 
