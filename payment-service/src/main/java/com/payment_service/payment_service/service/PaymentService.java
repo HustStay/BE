@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
-import vn.payos.model.v2.paymentLink.PaymentLinkData;
+import vn.payos.model.v2.paymentRequests.PaymentLinkData;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -130,7 +130,7 @@ public class PaymentService implements IPaymentService {
         String accountNumber = null;
         String bankName = null;
         try {
-            PaymentLinkData linkData = payOS.paymentRequests().getById(orderCode);
+            PaymentLinkData linkData = payOS.paymentRequests().getPaymentLinkInformation(orderCode);
             if (linkData != null) {
                 qrCode = linkData.getQrCode();
                 accountName = linkData.getAccountName();
