@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
+import vn.payos.model.v2.paymentLink.PaymentLinkData;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -78,7 +79,8 @@ public class PaymentService implements IPaymentService {
 
             CreatePaymentLinkResponse response = payOS.paymentRequests().create(paymentLinkRequest);
 
-            log.info("PayOS payment link created: checkoutUrl={}", response.getCheckoutUrl());
+            log.info("PayOS payment link created: checkoutUrl={}, qrCode={}",
+                    response.getCheckoutUrl(), response.getQrCode());
 
             // Save payment to database
             Payment payment = Payment.builder()
@@ -102,6 +104,9 @@ public class PaymentService implements IPaymentService {
                     .bookingId(request.getBookingId())
                     .amount(amount)
                     .status("PENDING")
+                    // Trả thẳng qrCode từ PayOS để frontend render QR
+                    .qrCode(response.getQrCode())
+                    .description(description)
                     .build();
 
         } catch (Exception e) {
@@ -118,12 +123,37 @@ public class PaymentService implements IPaymentService {
         }
 
         Payment payment = paymentOpt.get();
+
+        // Gọi PayOS API để lấy thông tin chi tiết, bao gồm qrCode
+        String qrCode = null;
+        String accountName = null;
+        String accountNumber = null;
+        String bankName = null;
+        try {
+            PaymentLinkData linkData = payOS.paymentRequests().getById(orderCode);
+            if (linkData != null) {
+                qrCode = linkData.getQrCode();
+                accountName = linkData.getAccountName();
+                accountNumber = linkData.getAccountNumber();
+                bankName = linkData.getBankName();
+                log.info("PayOS getById - orderCode={}, qrCode exists={}, accountNumber={}, bankName={}",
+                        orderCode, qrCode != null, accountNumber, bankName);
+            }
+        } catch (Exception e) {
+            log.warn("Không thể lấy PaymentLinkData từ PayOS cho orderCode={}: {}", orderCode, e.getMessage());
+        }
+
         return PaymentSessionResponse.builder()
                 .sessionId(payment.getOrderCode())
                 .sessionUrl(payment.getCheckoutUrl())
                 .bookingId(payment.getBookingId())
                 .amount(payment.getAmount())
                 .status(payment.getStatus())
+                .qrCode(qrCode)
+                .accountName(accountName)
+                .accountNumber(accountNumber)
+                .bankName(bankName)
+                .description("BOOKING-" + payment.getBookingId())
                 .build();
     }
 
