@@ -14,4 +14,5 @@ public class Bookings {
     public String status;
     public String address;
     public String imageUrl;
+    public double fee;
 }

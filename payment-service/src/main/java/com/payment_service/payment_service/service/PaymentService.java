@@ -92,8 +92,9 @@ public class PaymentService implements IPaymentService {
                     .provider("PAYOS")
                     .transactionId(String.valueOf(response.getPaymentLinkId()))
                     .checkoutUrl(response.getCheckoutUrl())
-                    .qrCode(qrCode)
-                    .description(description)
+                    .bin(response.getBin())
+                    .accountNumber(response.getAccountNumber())
+                    .accountName(response.getAccountName())
                     .expiredAt(LocalDateTime.now().plusMinutes(15))
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
@@ -107,8 +108,9 @@ public class PaymentService implements IPaymentService {
                     .bookingId(request.getBookingId())
                     .amount(amount)
                     .status("PENDING")
-                    // Trả qrCode về để frontend render QR ngay lập tức
-                    .qrCode(qrCode)
+                    .bin(response.getBin())
+                    .accountNumber(response.getAccountNumber())
+                    .accountName(response.getAccountName())
                     .description(description)
                     .build();
 
@@ -134,10 +136,10 @@ public class PaymentService implements IPaymentService {
                 .bookingId(payment.getBookingId())
                 .amount(payment.getAmount())
                 .status(payment.getStatus())
-                .qrCode(payment.getQrCode())
-                .description(payment.getDescription() != null
-                        ? payment.getDescription()
-                        : "BOOKING-" + payment.getBookingId())
+                .bin(payment.getBin())
+                .accountNumber(payment.getAccountNumber())
+                .accountName(payment.getAccountName())
+                .description("BOOKING-" + payment.getBookingId())
                 .build();
     }
 
