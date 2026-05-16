@@ -15,7 +15,7 @@ public class PaymentSessionResponse {
     private Long bookingId;
     private Long amount;
     private String status;
-    private String qrCode;          // Chuỗi EMV QR Code từ PayOS (để render QR ảnh)
+    private String bin;             // Mã BIN ngân hàng
     private String accountName;     // Tên chủ tài khoản
     private String accountNumber;   // Số tài khoản ngân hàng
     private String bankName;        // Tên ngân hàng

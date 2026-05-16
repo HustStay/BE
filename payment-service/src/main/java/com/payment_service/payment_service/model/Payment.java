@@ -41,12 +41,14 @@ public class Payment {
     @Column(name = "checkout_url", length = 1000)
     private String checkoutUrl;
 
-    // Lưu chuỗi EMV QR Code từ PayOS để frontend render ảnh QR
-    @Column(name = "qr_code", length = 2000)
-    private String qrCode;
+    @Column(name = "bin")
+    private String bin;
 
-    @Column(name = "description", length = 500)
-    private String description;
+    @Column(name = "account_number")
+    private String accountNumber;
+
+    @Column(name = "account_name")
+    private String accountName;
 
     @Column(name = "expired_at")
     private LocalDateTime expiredAt;

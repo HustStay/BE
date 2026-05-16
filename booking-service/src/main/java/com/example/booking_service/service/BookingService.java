@@ -177,6 +177,7 @@ public class BookingService implements IBookingService {
                     .checkOutDate(booking.getCheckOutDate())
                     .guests(booking.getGuests())
                     .status(resolveStatus(booking.getBookingType()))
+                    .fee(booking.getFee())
                     .build();
             books.add(bookingResponse);
         }
