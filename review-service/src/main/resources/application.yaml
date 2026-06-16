@@ -29,7 +29,7 @@ spring:
             url: ${HOTEL_SERVICE_URL:http://localhost:8083}
 
 server:
-  port: ${SERVER_PORT:8085}
+  port: ${PORT:${SERVER_PORT:8085}}
 
 eureka:
   client:
