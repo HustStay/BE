@@ -15,6 +15,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: ${JPA_SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   kafka:
     enabled: ${KAFKA_ENABLED:false}
