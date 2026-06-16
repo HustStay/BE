@@ -3,9 +3,13 @@ spring:
     name: "review-service"
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://14.162.146.23:5432/review_service}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root@2025}
+    # url: ${DB_URL:jdbc:postgresql://14.162.146.23:5432/review_service}
+    # username: ${DB_USERNAME:root}
+    # password: ${DB_PASSWORD:root@2025}
+
+    url: ${DB_URL:jdbc:postgresql://34.21.247.183:5432/review_service}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:18052004}
 
   jpa:
     hibernate:
