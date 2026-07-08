@@ -124,7 +124,7 @@ steps:
       gcloud run services update user-service \
         --project=$PROJECT_ID \
         --region=${_REGION} \
-        --remove-env-vars=DB_PASSWORD,DB_USERNAME,DB_URL,SERVER_PORT,EUREKA_CLIENT_ENABLED,JWT_SECRET || true
+        --clear-env-vars || true
     id: 'clear-user-service-env'
     waitFor: ['push-user-service']
 
@@ -154,7 +154,7 @@ steps:
       gcloud run services update hotel-service \
         --project=$PROJECT_ID \
         --region=${_REGION} \
-        --remove-env-vars=DB_PASSWORD,DB_USERNAME,DB_URL,SERVER_PORT,EUREKA_CLIENT_ENABLED || true
+        --clear-env-vars || true
     id: 'clear-hotel-service-env'
     waitFor: ['push-hotel-service']
 
@@ -186,7 +186,7 @@ steps:
       gcloud run services update room-service \
         --project=$PROJECT_ID \
         --region=${_REGION} \
-        --remove-env-vars=DB_PASSWORD,DB_USERNAME,DB_URL,SERVER_PORT,EUREKA_CLIENT_ENABLED || true
+        --clear-env-vars || true
     id: 'clear-room-service-env'
     waitFor: ['push-room-service']
 
@@ -257,7 +257,7 @@ steps:
       gcloud run services update review-service \
         --project=$PROJECT_ID \
         --region=${_REGION} \
-        --remove-env-vars=DB_PASSWORD,DB_USERNAME,DB_URL,SERVER_PORT,EUREKA_CLIENT_ENABLED || true
+        --clear-env-vars || true
     id: 'clear-review-service-env'
     waitFor: ['push-review-service']
 
