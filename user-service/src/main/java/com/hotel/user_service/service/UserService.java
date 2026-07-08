@@ -3,6 +3,7 @@ package com.hotel.user_service.service;
 import com.hotel.user_service.dto.request.AccountActive;
 import com.hotel.user_service.dto.request.RegisterRequest;
 import com.hotel.user_service.dto.request.UpdatePassword;
+import com.hotel.user_service.dto.request.UpdateProfileRequest;
 import com.hotel.user_service.dto.request.UpdateRoleRequest;
 import com.hotel.user_service.dto.response.Accounts;
 import com.hotel.user_service.dto.response.Customer;
@@ -106,6 +107,31 @@ public class UserService implements UserDetailsService {
             return Optional.of(profile);
         }
         return Optional.empty();
+    }
+
+    public boolean updateProfile(int userId, UpdateProfileRequest request) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (request.fullName != null && !request.fullName.isEmpty()) {
+                user.setFull_name(request.fullName);
+            }
+            if (request.email != null && !request.email.isEmpty()) {
+                user.setEmail(request.email);
+            }
+            if (request.phone != null && !request.phone.isEmpty()) {
+                user.setPhone(request.phone);
+            }
+            if (request.address != null && !request.address.isEmpty()) {
+                user.setAddress(request.address);
+            }
+            if (request.birth != null) {
+                user.setBirth(request.birth);
+            }
+            userRepository.save(user);
+            return true;
+        }
+        return false;
     }
 
     public boolean updatePassword(int userId, UpdatePassword body) {

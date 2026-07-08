@@ -112,12 +112,8 @@ public class CommentService implements ICommentService {
             Map<String,Object> customerResponse = userServiceClient.Customer(comment.getCustomerId());
             String customerName = (String) customerResponse.get("fullName");
 
-            Map<String,Object> hotelResponse = hotelServiceClient.getOwnerId(comment.getHotelId());
-            String ownerIdStr = String.valueOf(hotelResponse.get("ownerId"));
-            int ownerId = Integer.parseInt(ownerIdStr);
-
-            Map<String,Object> ownerResponse = userServiceClient.Customer(ownerId);
-            String hotelName = (String) ownerResponse.get("fullName");
+            Map<String,Object> hotelResponse = hotelServiceClient.getHotelDetails(comment.getHotelId());
+            String hotelName = (String) hotelResponse.get("hotelName");
 
             CommentByHotelId commentByHotelId = CommentByHotelId.builder()
                     .commentId(comment.getId())

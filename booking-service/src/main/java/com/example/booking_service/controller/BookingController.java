@@ -3,10 +3,9 @@ package com.example.booking_service.controller;
 import com.example.booking_service.dto.request.AddBooking;
 import com.example.booking_service.dto.request.CheckInCheckOut;
 import com.example.booking_service.dto.request.Update;
+import com.example.booking_service.model.BookingRequest;
 import com.example.booking_service.service.BookingService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -17,56 +16,73 @@ import java.util.Map;
 public class BookingController {
 
     private final BookingService bookingService;
-    
-    @Autowired(required = false)
-    private KafkaTemplate<String, Object> kafkaTemplate;
-    
+
     public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
 
+    // Gửi yêu cầu đặt phòng vào Kafka.
     @PostMapping("/booking")
-    public ResponseEntity<Map<String,Object>> booking(@RequestHeader("X-Auth-UserId") String userIdStr,
-                                                      @RequestBody AddBooking booking) {
-        Map<String,Object> response = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> booking(
+            @RequestHeader("X-Auth-UserId") String userIdStr,
+            @RequestBody AddBooking booking) {
+        Map<String, Object> response = new HashMap<>();
         try {
             int customerId = Integer.parseInt(userIdStr);
-            // Only send Kafka message if KafkaTemplate is available
-            if (kafkaTemplate != null) {
-                // Tạo booking event để gửi qua Kafka
-                Map<String, Object> bookingEvent = new HashMap<>();
-                bookingEvent.put("customerId", customerId);
-                bookingEvent.put("hotelId", booking.hotelId);
-                bookingEvent.put("checkInDate", booking.checkInDate.toString());
-                bookingEvent.put("checkOutDate", booking.checkOutDate.toString());
-                bookingEvent.put("guests", booking.guests);
-                bookingEvent.put("bookingType", booking.bookingType.toString());
-                bookingEvent.put("bookingItems", booking.bookingItems);
-                
-                // Gửi message đến Kafka topic
-                kafkaTemplate.send("booking-topic", String.valueOf(customerId), bookingEvent);
-            }
-            
-            // Xử lý booking trong service
-            Integer bookingId = bookingService.addBooking(customerId, booking);
-            if (bookingId != null) {
-                response.put("message","Booking successfully");
-                response.put("bookingId", bookingId);
-            }else {
-                response.put("message","Booking failed");
-            }
-            return ResponseEntity.ok(response);
+
+            // Gửi vào Kafka và lưu trạng thái PENDING
+            String requestId = bookingService.submitBookingRequest(customerId, booking);
+
+            response.put("requestId", requestId);
+            response.put("status", "PENDING");
+            response.put("message", "Yêu cầu đặt phòng đang được xử lý. Vui lòng chờ...");
+            return ResponseEntity.accepted().body(response);
+
         } catch (NumberFormatException e) {
             response.put("message", "Invalid X-Auth-UserId");
             return ResponseEntity.badRequest().body(response);
-        } catch(Exception e){
-            response.put("message","Error occurred during booking");
+        } catch (Exception e) {
+            response.put("message", "Đã xảy ra lỗi khi gửi yêu cầu đặt phòng.");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // polling kết quả xử lý booking.
+    @GetMapping("/booking/status/{requestId}")
+    public ResponseEntity<Map<String, Object>> getBookingStatus(@PathVariable String requestId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            BookingRequest bookingRequest = bookingService.getBookingRequestStatus(requestId);
+            if (bookingRequest == null) {
+                response.put("message", "Không tìm thấy yêu cầu đặt phòng.");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            response.put("status", bookingRequest.getStatus());
+
+            switch (bookingRequest.getStatus()) {
+                case "SUCCESS" -> {
+                    response.put("bookingId", bookingRequest.getBookingId());
+                    response.put("message", "Đặt phòng thành công!");
+                }
+                case "FAILED" -> {
+                    response.put("message", bookingRequest.getErrorMessage());
+                }
+                default -> {
+                    response.put("message", "Yêu cầu đang được xử lý...");
+                }
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi khi kiểm tra trạng thái đặt phòng.");
             return ResponseEntity.internalServerError().body(response);
         }
     }
 
     @GetMapping("/bookings")
-    public ResponseEntity<Map<String,Object>> getBookingsByCustomerId(@RequestHeader("X-Auth-UserId") String userIdStr) {
+    public ResponseEntity<Map<String, Object>> getBookingsByCustomerId(
+            @RequestHeader("X-Auth-UserId") String userIdStr) {
         Map<String, Object> response = new HashMap<>();
         try {
             int customerId = Integer.parseInt(userIdStr);
@@ -122,8 +138,9 @@ public class BookingController {
         }
     }
 
-    @GetMapping("/owner/bookings" )
-    public ResponseEntity<Map<String,Object>> getBookingsByHotelOwnerId(@RequestParam("hotelId") int hotelId) {
+    @GetMapping("/owner/bookings")
+    public ResponseEntity<Map<String, Object>> getBookingsByHotelOwnerId(
+            @RequestParam("hotelId") int hotelId) {
         Map<String, Object> response = new HashMap<>();
         try {
             var bookings = bookingService.getBookingsByHotelId(hotelId);
@@ -144,19 +161,19 @@ public class BookingController {
     }
 
     @PutMapping("/checkInCheckOut")
-    public ResponseEntity<Map<String,Object>> checkInCheckOut(@RequestBody CheckInCheckOut checkInCheckOut) {
-        Map<String,Object> response = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> checkInCheckOut(
+            @RequestBody CheckInCheckOut checkInCheckOut) {
+        Map<String, Object> response = new HashMap<>();
         try {
             boolean check = bookingService.checkIntOutHotel(checkInCheckOut);
             if (check) {
                 response.put("message", "Check-in/Check-out successful");
-            }
-            else {
+            } else {
                 response.put("message", "Check-in/Check-out failed");
             }
             return ResponseEntity.ok(response);
-        }catch (Exception e){
-            response.put("message","Error occurred during Check-in/Check-out");
+        } catch (Exception e) {
+            response.put("message", "Error occurred during Check-in/Check-out");
             return ResponseEntity.internalServerError().body(response);
         }
     }

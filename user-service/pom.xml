@@ -101,6 +101,11 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        <dependency>
+			<groupId>com.google.cloud.sql</groupId>
+			<artifactId>postgres-socket-factory</artifactId>
+			<version>1.24.1</version>
+		</dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>

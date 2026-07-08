@@ -42,5 +42,35 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("fromTime") LocalDateTime fromTime
     );
 
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.customerId = :customerId
+              AND b.hotelId = :hotelId
+              AND b.bookingType IN ('CONFIRMED', 'CHECKED_IN')
+              AND b.checkInDate < :checkOutDate
+              AND b.checkOutDate > :checkInDate
+            """)
+    List<Booking> findOverlappingActiveBookings(
+            @Param("customerId") int customerId,
+            @Param("hotelId") int hotelId,
+            @Param("checkInDate") Date checkInDate,
+            @Param("checkOutDate") Date checkOutDate
+    );
+
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.hotelId = :hotelId
+              AND UPPER(b.roomType) = UPPER(:roomType)
+              AND b.bookingType IN ('CONFIRMED', 'CHECKED_IN')
+              AND b.checkInDate < :checkOutDate
+              AND b.checkOutDate > :checkInDate
+            """)
+    List<Booking> findBookedRoomsForDateRange(
+            @Param("hotelId") int hotelId,
+            @Param("roomType") String roomType,
+            @Param("checkInDate") Date checkInDate,
+            @Param("checkOutDate") Date checkOutDate
+    );
+
     List<Booking> findByHotelId(int hotelId);
 }

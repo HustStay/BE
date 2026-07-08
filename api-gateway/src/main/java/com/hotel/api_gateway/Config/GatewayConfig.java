@@ -24,9 +24,6 @@ public class GatewayConfig {
     @Value("${services.room-service:lb://room-service}")
     private String roomServiceUrl;
 
-    @Value("${services.chat-service:lb://chat-service}")
-    private String chatServiceUrl;
-
     @Value("${services.payment-service:lb://payment-service}")
     private String paymentServiceUrl;
 
@@ -57,14 +54,6 @@ public class GatewayConfig {
                 .route("room-service", r -> r.path("/room-service/**")
                         .filters(f -> f.rewritePath("/room-service/(?<segment>.*)", "/${segment}"))
                         .uri(roomServiceUrl))
-                // Chat Service - WebSocket endpoint (must be before REST routes)
-                .route("chat-service-ws", r -> r.path("/chat-service/ws/**")
-                        .filters(f -> f.rewritePath("/chat-service/(?<segment>.*)", "/${segment}"))
-                        .uri(chatServiceUrl))
-                // Chat Service - REST API
-                .route("chat-service", r -> r.path("/chat-service/**")
-                        .filters(f -> f.rewritePath("/chat-service/(?<segment>.*)", "/${segment}"))
-                        .uri(chatServiceUrl))
                 .build();
     }
 }

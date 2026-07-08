@@ -49,124 +49,79 @@ public class HotelService implements IHotelService {
     @Autowired
     private ReviewServiceClient reviewServiceClient;
 
+    private Hotels mapHomeToHotels(Home home) {
+        Hotels hotelResponse = new Hotels();
+        hotelResponse.hotelId = home.getId();
+        hotelResponse.hotelName = home.getHome_name();
+        hotelResponse.rating = home.getRating();
+        hotelResponse.street = home.getStreet();
+        hotelResponse.district = home.getDistrict();
+        hotelResponse.city = home.getCity();
+        hotelResponse.country = home.getCountry();
+
+        // Lấy giá phòng thấp nhất từ room-service
+        double minPrice = home.getPrice_per_night(); // fallback
+        try {
+            Map<String, Object> priceResponse = roomServiceClient.getMinRoomPrice(home.getId());
+            if (priceResponse != null) {
+                Object found = priceResponse.get("found");
+                Object minPriceVal = priceResponse.get("minPrice");
+                if (Boolean.TRUE.equals(found) && minPriceVal != null) {
+                    minPrice = ((Number) minPriceVal).doubleValue();
+                }
+            }
+        } catch (Exception e) {
+            // room-service không khả dụng → giữ price_per_night
+        }
+        hotelResponse.pricePerNight = minPrice;
+
+        try {
+            Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
+            Object cnt = countResponse.get("countComment");
+            hotelResponse.reviewCount = cnt != null ? ((Number) cnt).intValue() : 0;
+        } catch (Exception e) {
+            hotelResponse.reviewCount = 0;
+        }
+
+        List<String> amenitiesList = new ArrayList<>();
+        List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());
+        for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
+            if (homeAmeneties.getAmenity() != null) {
+                amenitiesList.add(homeAmeneties.getAmenity().getAmenity_name());
+            }
+        }
+        hotelResponse.aminities = String.join(", ", amenitiesList);
+
+        List<HomeImage> homeImages = homeImageRepository.findHomeImageByHome_Id(home.getId());
+        if (!homeImages.isEmpty()) {
+            hotelResponse.imageUrl = homeImages.get(0).getImageUrl();
+        } else {
+            hotelResponse.imageUrl = "";
+        }
+
+        return hotelResponse;
+    }
+
     @Override
     public List<Hotels> getFamousHotels() {
-        List<Hotels> hotels=new ArrayList<>();
         List<Home> homes = homeRepository.findByRatingGreaterThan(4.0);
         if (homes.isEmpty()) {
             return null;
         }
-
-        for (Home home : homes) {
-            Hotels hotelResponse = new Hotels();
-            hotelResponse.hotelId = home.getId();
-            hotelResponse.hotelName = home.getHome_name();
-            hotelResponse.pricePerNight = home.getPrice_per_night();
-            hotelResponse.rating = home.getRating();
-            hotelResponse.street = home.getStreet();
-            hotelResponse.district = home.getDistrict();
-            hotelResponse.city = home.getCity();
-            hotelResponse.country = home.getCountry();
-
-            try {
-                Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
-                Object cnt = countResponse.get("countComment");
-                hotelResponse.reviewCount = cnt != null ? ((Number) cnt).intValue() : 0;
-            } catch (Exception e) {
-                hotelResponse.reviewCount = 0;
-            }
-
-            List<String> amenitiesList = new ArrayList<>();
-            List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());
-            if (homeAmenetiesList.isEmpty()) {
-                hotelResponse.aminities = "";
-                List<HomeImage> homeImages0 = homeImageRepository.findHomeImageByHome_Id(home.getId());
-                hotelResponse.imageUrl = homeImages0.isEmpty() ? "" : homeImages0.get(0).getImageUrl();
-                hotels.add(hotelResponse);
-                continue;
-            }
-
-            for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
-                List<Amenities> amenities = amenityRepository.findAnimitiesById(homeAmeneties.getAmenity().getId());
-                if (amenities.isEmpty()) {
-                    return null;
-                }
-                for (Amenities amenity : amenities) {
-                    amenitiesList.add(amenity.getAmenity_name());
-                }
-            }
-            hotelResponse.aminities = String.join(", ", amenitiesList);
-
-            List<HomeImage> homeImages = homeImageRepository.findHomeImageByHome_Id(home.getId());
-            if (homeImages.isEmpty()) {
-                hotelResponse.imageUrl = "";
-            } else {
-                hotelResponse.imageUrl = homeImages.get(0).getImageUrl();
-            }
-
-            hotels.add(hotelResponse);
-        }
-        return hotels;
+        return homes.parallelStream()
+                .map(this::mapHomeToHotels)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
     public List<Hotels> getAllHotels() {
-        List<Hotels> hotels=new ArrayList<>();
         List<Home> homes = homeRepository.findAll();
         if (homes.isEmpty()) {
             return null;
         }
-
-        for (Home home : homes) {
-            Hotels hotelResponse = new Hotels();
-            hotelResponse.hotelId = home.getId();
-            hotelResponse.hotelName = home.getHome_name();
-            hotelResponse.pricePerNight = home.getPrice_per_night();
-            hotelResponse.rating = home.getRating();
-            hotelResponse.street = home.getStreet();
-            hotelResponse.district = home.getDistrict();
-            hotelResponse.city = home.getCity();
-            hotelResponse.country = home.getCountry();
-
-            try {
-                Map<String, Object> countResponse = reviewServiceClient.getCountCommentByHotelId(home.getId());
-                Object cnt = countResponse.get("countComment");
-                hotelResponse.reviewCount = cnt != null ? ((Number) cnt).intValue() : 0;
-            } catch (Exception e) {
-                hotelResponse.reviewCount = 0;
-            }
-
-            List<String> amenitiesList = new ArrayList<>();
-            List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());
-            if (homeAmenetiesList.isEmpty()) {
-                hotelResponse.aminities = "";
-                List<HomeImage> homeImages0 = homeImageRepository.findHomeImageByHome_Id(home.getId());
-                hotelResponse.imageUrl = homeImages0.isEmpty() ? "" : homeImages0.get(0).getImageUrl();
-                hotels.add(hotelResponse);
-                continue;
-            }
-
-            for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
-                List<Amenities> amenities = amenityRepository.findAnimitiesById(homeAmeneties.getAmenity().getId());
-                if (amenities.isEmpty()) {
-                    return null;
-                }
-                for (Amenities amenity : amenities) {
-                    amenitiesList.add(amenity.getAmenity_name());
-                }
-            }
-            hotelResponse.aminities = String.join(", ", amenitiesList);
-
-            List<HomeImage> homeImages = homeImageRepository.findHomeImageByHome_Id(home.getId());
-            if (homeImages.isEmpty()) {
-                hotelResponse.imageUrl = "";
-            } else {
-                hotelResponse.imageUrl = homeImages.get(0).getImageUrl();
-            }
-
-            hotels.add(hotelResponse);
-        }
-        return hotels;
+        return homes.parallelStream()
+                .map(this::mapHomeToHotels)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
@@ -189,11 +144,8 @@ public class HotelService implements IHotelService {
                 hotelDetail.aminities = String.join(", ", "");
             }
             for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
-                List<Amenities> amenities = amenityRepository.findAnimitiesById(homeAmeneties.getAmenity().getId());
-                if (!amenities.isEmpty()) {
-                    for (Amenities amenity : amenities) {
-                        amenitiesList.add(amenity.getAmenity_name());
-                    }
+                if (homeAmeneties.getAmenity() != null) {
+                    amenitiesList.add(homeAmeneties.getAmenity().getAmenity_name());
                 }
             }
             hotelDetail.aminities = String.join(", ", amenitiesList);
@@ -231,9 +183,8 @@ public class HotelService implements IHotelService {
             List<String> amenitiesList = new ArrayList<>();
             List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(hotelId);
             for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
-                List<Amenities> amenities = amenityRepository.findAnimitiesById(homeAmeneties.getAmenity().getId());
-                for (Amenities amenity : amenities) {
-                    amenitiesList.add(amenity.getAmenity_name());
+                if (homeAmeneties.getAmenity() != null) {
+                    amenitiesList.add(homeAmeneties.getAmenity().getAmenity_name());
                 }
             }
             profile.aminities = amenitiesList;
@@ -303,42 +254,9 @@ public class HotelService implements IHotelService {
     }
 
 //    @Override
-//    public List<Hotels> getHotelsSearch(SearchHotel searchHotel) {
-//        List<Home> homes = homeRepository.findByCityContainingIgnoreCase(searchHotel.city);
-//        if (homes.isEmpty()) {
-//            return null;
-//        }
-//        List<Hotels> hotels = new ArrayList<>();
-//        for (Home home : homes) {
-//            Hotels hotelResponse = new Hotels();
-//            hotelResponse.hotelId = home.getId();
-//            hotelResponse.hotelName = home.getHome_name();
-//            hotelResponse.pricePerNight = home.getPrice_per_night();
-//            hotelResponse.rating = home.getRating();
-//            hotelResponse.street = home.getStreet();
-//            hotelResponse.district = home.getDistrict();
-//            hotelResponse.city = home.getCity();
-//            hotelResponse.country = home.getCountry();
 //
-//            List<String> amenitiesList = new ArrayList<>();
-//            List<HomeAmeneties> homeAmenetiesList = homeAmenityRepository.findHomeAmenetiesByHome_Id(home.getId());
-//            for (HomeAmeneties homeAmeneties : homeAmenetiesList) {
-//                List<Amenities> amenities = amenityRepository.findAnimitiesById(homeAmeneties.getAmenity().getId());
-//                for (Amenities amenity : amenities) {
-//                    amenitiesList.add(amenity.getAmenity_name());
-//                }
-//            }
-//            hotelResponse.aminities = String.join(", ", amenitiesList);
 //
-//            List<HomeImage> homeImages = homeImageRepository.findHomeImageByHome_Id(home.getId());
-//            if (!homeImages.isEmpty()) {
-//                hotelResponse.imageUrl = homeImages.get(0).getImageUrl();
-//            }
 //
-//            hotels.add(hotelResponse);
-//        }
-//        return hotels;
-//    }
 
     @Override
     public List<SearchHotelResult> searchHotels(SearchHotel searchHotel) {
@@ -348,50 +266,50 @@ public class HotelService implements IHotelService {
             return new ArrayList<>();
         }
 
-        List<SearchHotelResult> results = new ArrayList<>();
+        return homes.parallelStream()
+            .map(home -> {
+                try {
+                    Map<String, Object> roomResponse = roomServiceClient.getAvailableRoomCount(
+                        home.getId(),
+                        searchHotel.checkInDate,
+                        searchHotel.checkOutDate,
+                        searchHotel.numberOfGuests,
+                        searchHotel.numberOfRooms
+                    );
 
-        for (Home home : homes) {
-            try {
-                Map<String, Object> roomResponse = roomServiceClient.getAvailableRoomCount(
-                    home.getId(),
-                    searchHotel.checkInDate,
-                    searchHotel.checkOutDate,
-                    searchHotel.numberOfGuests,
-                    searchHotel.numberOfRooms
-                );
+                    Integer availableRooms = (Integer) roomResponse.get("availableRooms");
+                    Integer totalRooms = (Integer) roomResponse.get("totalRooms");
 
-                Integer availableRooms = (Integer) roomResponse.get("availableRooms");
-                Integer totalRooms = (Integer) roomResponse.get("totalRooms");
+                    if (availableRooms != null && availableRooms >= searchHotel.numberOfRooms) {
+                        SearchHotelResult result = new SearchHotelResult();
+                        result.setHotelId(home.getId());
+                        result.setHotelName(home.getHome_name());
+                        result.setStreet(home.getStreet());
+                        result.setDistrict(home.getDistrict());
+                        result.setCity(home.getCity());
+                        result.setCountry(home.getCountry());
+                        result.setRating(home.getRating());
+                        result.setAvailableRooms(availableRooms);
+                        result.setTotalRooms(totalRooms != null ? totalRooms : 0);
 
-                if (availableRooms != null && availableRooms >= searchHotel.numberOfRooms) {
-                    SearchHotelResult result = new SearchHotelResult();
-                    result.setHotelId(home.getId());
-                    result.setHotelName(home.getHome_name());
-                    result.setStreet(home.getStreet());
-                    result.setDistrict(home.getDistrict());
-                    result.setCity(home.getCity());
-                    result.setCountry(home.getCountry());
-                    result.setRating(home.getRating());
-                    result.setAvailableRooms(availableRooms);
-                    result.setTotalRooms(totalRooms != null ? totalRooms : 0);
+                        // Lấy hình ảnh
+                        List<HomeImage> homeImages = homeImageRepository.findHomeImageByHome_Id(home.getId());
+                        if (!homeImages.isEmpty()) {
+                            result.setImageUrl(homeImages.get(0).getImageUrl());
+                        } else {
+                            result.setImageUrl("");
+                        }
 
-                    // Lấy hình ảnh
-                    List<HomeImage> homeImages = homeImageRepository.findHomeImageByHome_Id(home.getId());
-                    if (!homeImages.isEmpty()) {
-                        result.setImageUrl(homeImages.get(0).getImageUrl());
-                    } else {
-                        result.setImageUrl("");
+                        return result;
                     }
-
-                    results.add(result);
+                } catch (Exception e) {
+                    // Log error và tiếp tục với khách sạn tiếp theo
+                    System.err.println("Error checking availability for hotel " + home.getId() + ": " + e.getMessage());
                 }
-            } catch (Exception e) {
-                // Log error và tiếp tục với khách sạn tiếp theo
-                System.err.println("Error checking availability for hotel " + home.getId() + ": " + e.getMessage());
-            }
-        }
-
-        return results;
+                return null;
+            })
+            .filter(java.util.Objects::nonNull)
+            .collect(java.util.stream.Collectors.toList());
     }
 
     @Override

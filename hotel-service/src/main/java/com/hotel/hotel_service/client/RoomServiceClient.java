@@ -17,5 +17,9 @@ public interface RoomServiceClient {
             @RequestParam("guests") int guests,
             @RequestParam("rooms") int rooms
     );
+
+    @GetMapping("/rooms/min-price")
+    Map<String, Object> getMinRoomPrice(@RequestParam("hotelId") int hotelId);
 }
+
 

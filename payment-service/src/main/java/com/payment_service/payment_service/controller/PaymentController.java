@@ -2,6 +2,8 @@ package com.payment_service.payment_service.controller;
 
 import com.payment_service.payment_service.dto.CreatePaymentRequest;
 import com.payment_service.payment_service.dto.PaymentSessionResponse;
+import com.payment_service.payment_service.model.Payment;
+import com.payment_service.payment_service.repository.PaymentRepository;
 import com.payment_service.payment_service.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import vn.payos.PayOS;
 import vn.payos.model.webhooks.Webhook;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -20,11 +23,9 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final PayOS payOS;
+    private final PaymentRepository paymentRepository;
 
-    /**
-     * Tạo link thanh toán PayOS
-     * POST /api/payment-service/payos/create-payment-link
-     */
+    // Tạo link thanh toán PayOS
     @PostMapping("/payos/create-payment-link")
     public ResponseEntity<?> createPaymentLink(@RequestBody CreatePaymentRequest request) {
         try {
@@ -38,10 +39,22 @@ public class PaymentController {
         }
     }
 
-    /**
-     * Lấy thông tin thanh toán theo orderCode
-     * GET /api/payment-service/payos/payment/{orderCode}
-     */
+    //Lấy trạng thái thanh toán theo bookingId (được gọi từ booking-service)
+    @GetMapping("/payos/status/booking/{bookingId}")
+    public ResponseEntity<?> getPaymentStatusByBookingId(@PathVariable Long bookingId) {
+        Optional<Payment> paymentOpt = paymentRepository.findByBookingId(bookingId);
+        if (paymentOpt.isEmpty()) {
+            return ResponseEntity.ok(Map.of("isPaid", false, "status", "NOT_FOUND"));
+        }
+        Payment payment = paymentOpt.get();
+        boolean isPaid = "PAID".equalsIgnoreCase(payment.getStatus());
+        return ResponseEntity.ok(Map.of(
+                "isPaid", isPaid,
+                "status", payment.getStatus() != null ? payment.getStatus() : "UNKNOWN"
+        ));
+    }
+
+    //Lấy thông tin thanh toán theo orderCode
     @GetMapping("/payos/payment/{orderCode}")
     public ResponseEntity<?> getPaymentByOrderCode(@PathVariable Long orderCode) {
         try {
@@ -53,10 +66,7 @@ public class PaymentController {
         }
     }
 
-    /**
-     * Hủy thanh toán
-     * POST /api/payment-service/payos/cancel/{orderCode}
-     */
+    // Hủy thanh toán
     @PostMapping("/payos/cancel/{orderCode}")
     public ResponseEntity<?> cancelPayment(@PathVariable Long orderCode) {
         try {
@@ -68,10 +78,7 @@ public class PaymentController {
         }
     }
 
-    /**
-     * Webhook từ PayOS - nhận thông báo khi thanh toán thành công/thất bại
-     * POST /api/payment-service/payos/webhook
-     */
+    // Webhook từ PayOS - nhận thông báo khi thanh toán thành công/thất bại
     @PostMapping("/payos/webhook")
     public ResponseEntity<String> handleWebhook(@RequestBody Webhook webhook) {
         try {
@@ -93,10 +100,7 @@ public class PaymentController {
         }
     }
 
-    /**
-     * Return URL handler - xác nhận thanh toán thành công sau khi redirect từ PayOS
-     * GET /api/payment-service/payos/success
-     */
+    // Return URL handler - xác nhận thanh toán thành công sau khi redirect từ PayOS
     @GetMapping("/payos/success")
     public ResponseEntity<?> handlePaymentSuccess(
             @RequestParam(value = "orderCode", required = false) Long orderCode,

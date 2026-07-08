@@ -44,17 +44,11 @@ steps:
     id: 'build-review-service'
     waitFor: ['-']
 
-  # Build Chat Service
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service:latest', './chat-service']
-    id: 'build-chat-service'
-    waitFor: ['-']
-
   # Build API Gateway (last - after all services)
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway:$SHORT_SHA', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway:latest', './api-gateway']
     id: 'build-api-gateway'
-    waitFor: ['build-user-service', 'build-hotel-service', 'build-room-service', 'build-booking-service', 'build-payment-service', 'build-review-service', 'build-chat-service']
+    waitFor: ['build-user-service', 'build-hotel-service', 'build-room-service', 'build-booking-service', 'build-payment-service', 'build-review-service']
 
   # ========== PUSH ALL IMAGES ==========
   
@@ -92,11 +86,6 @@ steps:
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/review-service']
     id: 'push-review-service'
     waitFor: ['build-review-service']
-
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service']
-    id: 'push-chat-service'
-    waitFor: ['build-chat-service']
 
   # ========== DEPLOY TO CLOUD RUN ==========
 
@@ -233,28 +222,6 @@ steps:
     id: 'deploy-review-service'
     waitFor: ['push-review-service']
 
-  # Deploy Chat Service
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-    - 'run'
-    - 'deploy'
-    - 'chat-service'
-    - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service:$SHORT_SHA'
-    - '--region=${_REGION}'
-    - '--platform=managed'
-    - '--port=8080'
-    - '--memory=1Gi'
-    - '--timeout=600'
-    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false'
-    - '--set-env-vars=DB_URL=jdbc:postgresql://14.162.146.23:5432/chat_service,DB_USERNAME=root'
-    - '--set-env-vars=USER_SERVICE_URL=https://user-service-310906765270.asia-southeast1.run.app'
-    - '--set-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
-    - '--set-secrets=DB_PASSWORD=db-password:latest'
-    - '--allow-unauthenticated'
-    id: 'deploy-chat-service'
-    waitFor: ['push-chat-service']
-
   # Deploy API Gateway (last - depends on all services)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -275,7 +242,6 @@ steps:
     - '--set-env-vars=SERVICES_BOOKING_SERVICE=https://booking-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=SERVICES_PAYMENT_SERVICE=https://payment-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=SERVICES_REVIEW_SERVICE=https://review-service-310906765270.asia-southeast1.run.app'
-    - '--set-env-vars=SERVICES_CHAT_SERVICE=https://chat-service-310906765270.asia-southeast1.run.app'
     - '--set-secrets=JWT_SECRET=jwt-secret:latest'
     - '--allow-unauthenticated'
     id: 'deploy-api-gateway'
@@ -289,7 +255,6 @@ images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/booking-service:$SHORT_SHA'
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/payment-service:$SHORT_SHA'
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/review-service:$SHORT_SHA'
-  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/chat-service:$SHORT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY

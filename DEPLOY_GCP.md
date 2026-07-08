@@ -397,7 +397,6 @@ SERVICES=(
   "booking-service"
   "payment-service"
   "review-service"
-  "chat-service"
   "api-gateway"
 )
 
@@ -423,11 +422,9 @@ echo "🚀 Now deploy using gcloud run deploy commands..."
    - Hoặc deploy Eureka trên **GKE** (Kubernetes)
    - Hoặc hardcode service URLs trong API Gateway
 
-2. **WebSocket (Chat Service)**: Cloud Run hỗ trợ WebSocket nhưng có timeout. Cân nhắc sử dụng **Firebase Realtime Database** hoặc **Pub/Sub**.
+2. **Chi phí**: Bắt đầu với `--min-instances=0` để tiết kiệm (cold start ~5s).
 
-3. **Chi phí**: Bắt đầu với `--min-instances=0` để tiết kiệm (cold start ~5s).
-
-4. **Secrets**: KHÔNG commit secrets vào git. Luôn sử dụng Secret Manager.
+3. **Secrets**: KHÔNG commit secrets vào git. Luôn sử dụng Secret Manager.
 
 ---
 

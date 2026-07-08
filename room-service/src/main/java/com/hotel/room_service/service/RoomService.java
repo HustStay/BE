@@ -5,6 +5,7 @@ import com.hotel.room_service.client.BookingServiceClient;
 import com.hotel.room_service.client.HotelServiceClient;
 import com.hotel.room_service.dto.request.AddRoom;
 import com.hotel.room_service.dto.request.UpdateActive;
+import com.hotel.room_service.dto.request.UpdateAvailability;
 import com.hotel.room_service.dto.request.UpdateRoom;
 import com.hotel.room_service.dto.response.RoomByHotel;
 import com.hotel.room_service.dto.response.Rooms;
@@ -221,6 +222,20 @@ public class RoomService implements IRoomService {
         if (roomOptional.isPresent()) {
             Room room = roomOptional.get();
             room.setActive(updateActive.isActive);
+            roomRepository.save(room);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean updateAvailability(UpdateAvailability updateAvailability) {
+        Optional<Room> roomOptional = roomRepository.findById(updateAvailability.roomId);
+        if (roomOptional.isPresent()) {
+            Room room = roomOptional.get();
+            room.setAvailable(updateAvailability.isAvailable);
+            room.setUpdated_at(LocalDateTime.now());
             roomRepository.save(room);
             return true;
         } else {

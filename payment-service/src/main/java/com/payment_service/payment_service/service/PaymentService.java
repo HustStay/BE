@@ -1,7 +1,6 @@
 package com.payment_service.payment_service.service;
 
 import com.payment_service.payment_service.Iservice.IPaymentService;
-import com.payment_service.payment_service.client.BookingServiceClient;
 import com.payment_service.payment_service.dto.CreatePaymentRequest;
 import com.payment_service.payment_service.dto.PaymentSessionResponse;
 import com.payment_service.payment_service.model.Payment;
@@ -24,7 +23,6 @@ public class PaymentService implements IPaymentService {
 
     private final PayOS payOS;
     private final PaymentRepository paymentRepository;
-    private final BookingServiceClient bookingServiceClient;
 
     @Value("${payos.return-url}")
     private String returnUrl;
@@ -65,6 +63,7 @@ public class PaymentService implements IPaymentService {
             // Build PayOS payment link request
             String safeReturnUrl = buildCallbackUrl(returnUrl, orderCode);
             String safeCancelUrl = buildCallbackUrl(cancelUrl, orderCode);
+            
             CreatePaymentLinkRequest paymentLinkRequest = CreatePaymentLinkRequest.builder()
                     .orderCode(orderCode)
                     .amount(amount)
@@ -92,6 +91,7 @@ public class PaymentService implements IPaymentService {
                     .provider("PAYOS")
                     .transactionId(String.valueOf(response.getPaymentLinkId()))
                     .checkoutUrl(response.getCheckoutUrl())
+                    .qrCode(qrCode)
                     .bin(response.getBin())
                     .accountNumber(response.getAccountNumber())
                     .accountName(response.getAccountName())
@@ -112,6 +112,7 @@ public class PaymentService implements IPaymentService {
                     .accountNumber(response.getAccountNumber())
                     .accountName(response.getAccountName())
                     .description(description)
+                    .qrCode(qrCode)
                     .build();
 
         } catch (Exception e) {
@@ -140,6 +141,7 @@ public class PaymentService implements IPaymentService {
                 .accountNumber(payment.getAccountNumber())
                 .accountName(payment.getAccountName())
                 .description("BOOKING-" + payment.getBookingId())
+                .qrCode(payment.getQrCode())
                 .build();
     }
 
@@ -152,22 +154,13 @@ public class PaymentService implements IPaymentService {
                 payment.setStatus("CANCELLED");
                 payment.setUpdatedAt(LocalDateTime.now());
                 paymentRepository.save(payment);
-
-                // Notify booking service
-                try {
-                    bookingServiceClient.updateBookingStatus(payment.getBookingId(), "CANCELLED");
-                } catch (Exception e) {
-                    log.warn("Could not update booking status: {}", e.getMessage());
-                }
             }
         } catch (Exception e) {
             log.error("Error cancelling payment: {}", e.getMessage(), e);
         }
     }
 
-    /**
-     * Xử lý webhook từ PayOS khi thanh toán thành công
-     */
+    //Xử lý webhook từ PayOS khi thanh toán thành công
     public void handlePaymentSuccess(Long orderCode) {
         Optional<Payment> paymentOpt = paymentRepository.findByOrderCode(String.valueOf(orderCode));
         if (paymentOpt.isPresent()) {
@@ -177,14 +170,6 @@ public class PaymentService implements IPaymentService {
                 payment.setStatus("PAID");
                 payment.setUpdatedAt(LocalDateTime.now());
                 paymentRepository.save(payment);
-
-                // Notify booking service that payment is confirmed
-                try {
-                    bookingServiceClient.updateBookingStatus(payment.getBookingId(), "CONFIRMED");
-                    log.info("Booking {} status updated to CONFIRMED", payment.getBookingId());
-                } catch (Exception e) {
-                    log.warn("Could not update booking status: {}", e.getMessage());
-                }
             }
         }
     }

@@ -37,7 +37,7 @@ GOTO USAGE
 echo Building and pushing all services...
 echo.
 
-FOR %%s IN (eureka-server user-service hotel-service room-service booking-service payment-service review-service chat-service api-gateway) DO (
+FOR %%s IN (eureka-server user-service hotel-service room-service booking-service payment-service review-service api-gateway) DO (
     echo Building %%s...
     cd %%s
     docker build -t %REPO%/%%s:latest .

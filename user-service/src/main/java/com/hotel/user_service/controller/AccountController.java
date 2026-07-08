@@ -5,6 +5,7 @@ import com.hotel.user_service.dto.request.AccountActive;
 import com.hotel.user_service.dto.request.LoginRequest;
 import com.hotel.user_service.dto.request.RegisterRequest;
 import com.hotel.user_service.dto.request.UpdatePassword;
+import com.hotel.user_service.dto.request.UpdateProfileRequest;
 import com.hotel.user_service.dto.request.UpdateRoleRequest;
 import com.hotel.user_service.dto.response.Customer;
 import com.hotel.user_service.model.User;
@@ -112,6 +113,25 @@ public class AccountController {
                 response.put("profile", profileOptional.get());
             } else {
                 response.put("message", "User not found");
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<Map<String,Object>> updateProfile(@RequestHeader("X-Auth-UserId") String userIdStr,
+                                                             @RequestBody UpdateProfileRequest body) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            int userId = Integer.parseInt(userIdStr);
+            boolean check = userService.updateProfile(userId, body);
+            if (check) {
+                response.put("message", "Profile updated successfully");
+            } else {
+                response.put("message", "User not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
             return ResponseEntity.ok(response);
         } catch (Exception e) {

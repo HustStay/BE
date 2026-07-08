@@ -14,4 +14,7 @@ public interface HotelServiceClient {
 
     @GetMapping("/ownerId")
     Map<String, Object> getOwnerId(@RequestParam("hotelId") int hotelId);
+
+    @GetMapping("/hotel_detail")
+    Map<String, Object> getHotelDetails(@RequestParam("hotelId") int hotelId);
 }

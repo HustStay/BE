@@ -41,6 +41,9 @@ public class Payment {
     @Column(name = "checkout_url", length = 1000)
     private String checkoutUrl;
 
+    @Column(name = "qr_code", length = 2000)
+    private String qrCode;
+
     @Column(name = "bin")
     private String bin;
 

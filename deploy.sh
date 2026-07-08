@@ -22,7 +22,6 @@ SERVICES=(
   "booking-service"
   "payment-service"
   "review-service"
-  "chat-service"
   "api-gateway"
 )
 

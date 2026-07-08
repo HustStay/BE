@@ -16,7 +16,6 @@ public interface IHotelService {
     HotelProfile getHotelProfile(int hotelId);
     void updateHotelProfile(int hotelId, UpdateHotelProfileRequest request);
 
-//    List<Hotels> getHotelsSearch(SearchHotel searchHotel);
     List<SearchHotelResult> searchHotels(SearchHotel searchHotel);
     // Booking service call
     boolean existsById(int hotelId);

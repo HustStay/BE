@@ -20,4 +20,5 @@ public class PaymentSessionResponse {
     private String accountNumber;   // Số tài khoản ngân hàng
     private String bankName;        // Tên ngân hàng
     private String description;     // Nội dung chuyển khoản
+    private String qrCode;          // Chuỗi EMV QR code từ PayOS (để frontend tự render QR)
 }

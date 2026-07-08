@@ -2,9 +2,12 @@ package com.hotel.room_service.controller;
 
 import com.hotel.room_service.dto.request.AddRoom;
 import com.hotel.room_service.dto.request.UpdateActive;
+import com.hotel.room_service.dto.request.UpdateAvailability;
 import com.hotel.room_service.dto.request.UpdateRoom;
 import com.hotel.room_service.dto.response.RoomByHotel;
 import com.hotel.room_service.dto.response.Rooms;
+import com.hotel.room_service.model.Room;
+import com.hotel.room_service.repository.RoomRepository;
 import com.hotel.room_service.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +23,12 @@ import java.util.Map;
 public class RoomController {
 
     private final RoomService roomService;
+    private final RoomRepository roomRepository;
 
     @GetMapping("/rooms")
     public ResponseEntity<Map<String, Object>> getRooms(@RequestParam("hotelId") int hotelId) {
         Map<String, Object> response = new HashMap<>();
-        try{
+        try {
             List<RoomByHotel> roomByHotel = roomService.findRoomByHotelId(hotelId);
             if (roomByHotel != null) {
                 response.put("rooms", roomByHotel);
@@ -33,9 +37,40 @@ public class RoomController {
                 response.put("message", "Không tìm thấy phòng cho khách sạn này");
             }
             return ResponseEntity.ok(response);
-        }catch (Exception e){
+        } catch (Exception e) {
             response.put("message", "Lỗi khi lấy phòng cho khách sạn này");
             return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Lấy giá phòng thấp nhất của một khách sạn (dùng nội bộ bởi hotel-service)
+    @GetMapping("/rooms/min-price")
+    public ResponseEntity<Map<String, Object>> getMinRoomPrice(@RequestParam("hotelId") int hotelId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Ưu tiên lấy phòng đang active
+            List<Room> rooms = roomRepository.findByHotelidAndActive(hotelId, true);
+            if (rooms == null || rooms.isEmpty()) {
+                rooms = roomRepository.findByHotelid(hotelId);
+            }
+            if (rooms == null || rooms.isEmpty()) {
+                response.put("minPrice", 0);
+                response.put("found", false);
+                return ResponseEntity.ok(response);
+            }
+            double minPrice = rooms.stream()
+                    .mapToDouble(Room::getPrice_per_night)
+                    .filter(p -> p > 0)
+                    .min()
+                    .orElse(0);
+            response.put("minPrice", minPrice);
+            response.put("found", minPrice > 0);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("minPrice", 0);
+            response.put("found", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.ok(response);
         }
     }
 
@@ -60,7 +95,7 @@ public class RoomController {
         }
     }
 
-    @PutMapping("/room/update" )
+    @PutMapping("/room/update")
     public ResponseEntity<Map<String, Object>> updateRoom(@RequestBody UpdateRoom updateRoom) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -77,7 +112,7 @@ public class RoomController {
         }
     }
 
-    @PostMapping("/room/add" )
+    @PostMapping("/room/add")
     public ResponseEntity<Map<String, Object>> addRoom(@RequestBody AddRoom addRoom) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -94,7 +129,7 @@ public class RoomController {
         }
     }
 
-    @PutMapping("/room/active" )
+    @PutMapping("/room/active")
     public ResponseEntity<Map<String, Object>> activeRoom(@RequestBody UpdateActive updateActive) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -111,7 +146,24 @@ public class RoomController {
         }
     }
 
-    @GetMapping("/rooms/all" )
+    @PutMapping("/room/availability")
+    public ResponseEntity<Map<String, Object>> updateAvailability(@RequestBody UpdateAvailability updateAvailability) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Boolean updated = roomService.updateAvailability(updateAvailability);
+            if (updated) {
+                response.put("message", "Cập nhật trạng thái phòng thành công");
+            } else {
+                response.put("message", "Cập nhật trạng thái phòng thất bại");
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi khi cập nhật trạng thái phòng");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @GetMapping("/rooms/all")
     public ResponseEntity<Map<String, Object>> getAllRooms(@RequestHeader("X-Auth-UserId") String userIdStr) {
         Map<String, Object> response = new HashMap<>();
         try {

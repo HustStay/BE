@@ -7,7 +7,7 @@ spring:
     # username: ${DB_USERNAME:root}
     # password: ${DB_PASSWORD:root@2025}
 
-    url: ${DB_URL:jdbc:postgresql://34.21.247.183:5432/booking_service}
+    url: ${DB_URL:jdbc:postgresql://34.142.184.250:5432/booking_service}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:18052004}
 
@@ -20,11 +20,20 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   kafka:
-    enabled: ${KAFKA_ENABLED:false}
     bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: booking-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+    listener:
+      ack-mode: manual_immediate
 
 server:
   port: ${PORT:8084}
