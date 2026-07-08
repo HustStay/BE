@@ -42,7 +42,7 @@ steps:
         PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
         RUNTIME_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
         gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-          --member="serviceAccount:${RUNTIME_SA}" \
+          --member="serviceAccount:$$RUNTIME_SA" \
           --role="roles/secretmanager.secretAccessor"
     id: 'grant-secret-accessor'
     waitFor: ['enable-secret-manager-api']
