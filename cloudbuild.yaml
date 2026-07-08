@@ -43,7 +43,7 @@ steps:
         RUNTIME_SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
         for SECRET_NAME in db-password jwt-secret google-client-id google-client-secret stripe-publishable-key stripe-secret-key; do
           gcloud secrets add-iam-policy-binding "$$SECRET_NAME" \
-            --project="$$PROJECT_ID" \
+            --project="$PROJECT_ID" \
             --member="serviceAccount:$$RUNTIME_SA" \
             --role="roles/secretmanager.secretAccessor"
         done
