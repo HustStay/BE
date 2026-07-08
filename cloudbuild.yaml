@@ -165,6 +165,7 @@ steps:
     - '--port=8080'
     - '--memory=1Gi'
     - '--timeout=600'
+    - '--clear-env-vars'
     - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/room_service,DB_USERNAME=postgres,DB_PASSWORD=18052004'
     - '--set-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=BOOKING_SERVICE_URL=https://booking-service-310906765270.asia-southeast1.run.app'
