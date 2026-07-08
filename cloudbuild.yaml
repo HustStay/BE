@@ -145,17 +145,17 @@ steps:
     id: 'deploy-user-service'
     waitFor: ['delete-user-service']
 
-  # Clear stale env vars for Hotel Service before redeploy
+  # Recreate Hotel Service to avoid stale env var typing from prior revisions
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: bash
     args:
     - '-c'
     - |
-      gcloud run services update hotel-service \
+      gcloud run services delete hotel-service \
         --project=$PROJECT_ID \
         --region=${_REGION} \
-        --clear-env-vars || true
-    id: 'clear-hotel-service-env'
+        --quiet || true
+    id: 'delete-hotel-service'
     waitFor: ['push-hotel-service']
 
   # Deploy Hotel Service
@@ -175,7 +175,7 @@ steps:
     - '--update-env-vars=ROOM_SERVICE_URL=https://room-service-310906765270.asia-southeast1.run.app'
     - '--update-env-vars=REVIEW_SERVICE_URL=https://review-service-310906765270.asia-southeast1.run.app'
     id: 'deploy-hotel-service'
-    waitFor: ['clear-hotel-service-env']
+    waitFor: ['delete-hotel-service']
 
   # Recreate Room Service to avoid stale env var typing from prior revisions
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
