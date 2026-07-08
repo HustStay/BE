@@ -42,6 +42,12 @@ steps:
         PROJECT_NUMBER="$(curl -sfH 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/project/numeric-project-id)"
         RUNTIME_SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
         for SECRET_NAME in db-password jwt-secret google-client-id google-client-secret stripe-publishable-key stripe-secret-key; do
+          if ! gcloud secrets describe "$$SECRET_NAME" --project="$PROJECT_ID" >/dev/null 2>&1; then
+            printf '' | gcloud secrets create "$$SECRET_NAME" \
+              --project="$PROJECT_ID" \
+              --replication-policy=automatic \
+              --data-file=-
+          fi
           gcloud secrets add-iam-policy-binding "$$SECRET_NAME" \
             --project="$PROJECT_ID" \
             --member="serviceAccount:$$RUNTIME_SA" \
