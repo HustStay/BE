@@ -223,6 +223,19 @@ steps:
     id: 'deploy-payment-service'
     waitFor: ['push-payment-service']
 
+  # Clear stale env vars for Review Service before redeploy
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+    - '-c'
+    - |
+      gcloud run services update review-service \
+        --project=$PROJECT_ID \
+        --region=${_REGION} \
+        --remove-env-vars=DB_PASSWORD,DB_USERNAME,DB_URL,SERVER_PORT,EUREKA_CLIENT_ENABLED || true
+    id: 'clear-review-service-env'
+    waitFor: ['push-review-service']
+
   # Deploy Review Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -236,12 +249,11 @@ steps:
     - '--port=8080'
     - '--memory=1Gi'
     - '--timeout=600'
-    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false'
-    - '--set-env-vars=DB_URL=jdbc:postgresql://14.162.146.23:5432/review_service,DB_USERNAME=root'
+    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/review_service,DB_USERNAME=postgres,DB_PASSWORD=18052004'
     - '--set-env-vars=USER_SERVICE_URL=https://user-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
     id: 'deploy-review-service'
-    waitFor: ['push-review-service']
+    waitFor: ['clear-review-service-env']
 
   # Deploy API Gateway (last - depends on all services)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
