@@ -149,8 +149,6 @@ steps:
     - '--set-env-vars=DB_URL=jdbc:postgresql://14.162.146.23:5432/hotel_service,DB_USERNAME=root'
     - '--set-env-vars=ROOM_SERVICE_URL=https://room-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=REVIEW_SERVICE_URL=https://review-service-310906765270.asia-southeast1.run.app'
-    - '--set-secrets=DB_PASSWORD=db-password:latest'
-    - '--allow-unauthenticated'
     id: 'deploy-hotel-service'
     waitFor: ['push-hotel-service']
 
@@ -171,8 +169,6 @@ steps:
     - '--set-env-vars=DB_URL=jdbc:postgresql://14.162.146.23:5432/room_service,DB_USERNAME=root'
     - '--set-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=BOOKING_SERVICE_URL=https://booking-service-310906765270.asia-southeast1.run.app'
-    - '--set-secrets=DB_PASSWORD=db-password:latest'
-    - '--allow-unauthenticated'
     id: 'deploy-room-service'
     waitFor: ['push-room-service']
 
@@ -212,10 +208,6 @@ steps:
     - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false'
     - '--set-env-vars=DB_URL=jdbc:postgresql://14.162.146.23:5432/payment_service,DB_USERNAME=root'
     - '--set-env-vars=BOOKING_SERVICE_URL=https://booking-service-310906765270.asia-southeast1.run.app'
-    - '--set-secrets=DB_PASSWORD=db-password:latest'
-    - '--set-secrets=STRIPE_PUBLISHABLE_KEY=stripe-publishable-key:latest'
-    - '--set-secrets=STRIPE_SECRET_KEY=stripe-secret-key:latest'
-    - '--allow-unauthenticated'
     id: 'deploy-payment-service'
     waitFor: ['push-payment-service']
 
@@ -236,8 +228,6 @@ steps:
     - '--set-env-vars=DB_URL=jdbc:postgresql://14.162.146.23:5432/review_service,DB_USERNAME=root'
     - '--set-env-vars=USER_SERVICE_URL=https://user-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
-    - '--set-secrets=DB_PASSWORD=db-password:latest'
-    - '--allow-unauthenticated'
     id: 'deploy-review-service'
     waitFor: ['push-review-service']
 
@@ -261,8 +251,6 @@ steps:
     - '--set-env-vars=SERVICES_BOOKING_SERVICE=https://booking-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=SERVICES_PAYMENT_SERVICE=https://payment-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=SERVICES_REVIEW_SERVICE=https://review-service-310906765270.asia-southeast1.run.app'
-    - '--set-secrets=JWT_SECRET=jwt-secret:latest'
-    - '--allow-unauthenticated'
     id: 'deploy-api-gateway'
     waitFor: ['push-api-gateway', 'deploy-user-service', 'deploy-hotel-service', 'deploy-room-service']
 
