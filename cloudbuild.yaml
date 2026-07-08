@@ -32,30 +32,6 @@ steps:
     id: 'enable-secret-manager-api'
     waitFor: ['ensure-artifact-repo']
 
-  # Grant Cloud Run's default runtime service account access to Secret Manager
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        set -e
-        PROJECT_NUMBER="$(curl -sfH 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/project/numeric-project-id)"
-        RUNTIME_SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
-        for SECRET_NAME in db-password jwt-secret google-client-id google-client-secret stripe-publishable-key stripe-secret-key; do
-          if ! gcloud secrets describe "$$SECRET_NAME" --project="$PROJECT_ID" >/dev/null 2>&1; then
-            printf '' | gcloud secrets create "$$SECRET_NAME" \
-              --project="$PROJECT_ID" \
-              --replication-policy=automatic \
-              --data-file=-
-          fi
-          gcloud secrets add-iam-policy-binding "$$SECRET_NAME" \
-            --project="$PROJECT_ID" \
-            --member="serviceAccount:$$RUNTIME_SA" \
-            --role="roles/secretmanager.secretAccessor"
-        done
-    id: 'grant-secret-accessor'
-    waitFor: ['enable-secret-manager-api']
-
   # ========== BUILD ALL SERVICES ==========
   
   # Build User Service
@@ -156,7 +132,7 @@ steps:
     - '--set-secrets=DB_PASSWORD=db-password:latest'
     - '--set-secrets=JWT_SECRET=jwt-secret:latest'
     id: 'deploy-user-service'
-    waitFor: ['push-user-service', 'grant-secret-accessor']
+    waitFor: ['push-user-service']
 
   # Deploy Hotel Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -178,7 +154,7 @@ steps:
     - '--set-secrets=DB_PASSWORD=db-password:latest'
     - '--allow-unauthenticated'
     id: 'deploy-hotel-service'
-    waitFor: ['push-hotel-service', 'grant-secret-accessor']
+    waitFor: ['push-hotel-service']
 
   # Deploy Room Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -200,7 +176,7 @@ steps:
     - '--set-secrets=DB_PASSWORD=db-password:latest'
     - '--allow-unauthenticated'
     id: 'deploy-room-service'
-    waitFor: ['push-room-service', 'grant-secret-accessor']
+    waitFor: ['push-room-service']
 
   # Deploy Booking Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -223,7 +199,7 @@ steps:
     - '--set-secrets=GOOGLE_CLIENT_ID=google-client-id:latest'
     - '--set-secrets=GOOGLE_CLIENT_SECRET=google-client-secret:latest'
     id: 'deploy-booking-service'
-    waitFor: ['push-booking-service', 'grant-secret-accessor']
+    waitFor: ['push-booking-service']
 
   # Deploy Payment Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -246,7 +222,7 @@ steps:
     - '--set-secrets=STRIPE_SECRET_KEY=stripe-secret-key:latest'
     - '--allow-unauthenticated'
     id: 'deploy-payment-service'
-    waitFor: ['push-payment-service', 'grant-secret-accessor']
+    waitFor: ['push-payment-service']
 
   # Deploy Review Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -268,7 +244,7 @@ steps:
     - '--set-secrets=DB_PASSWORD=db-password:latest'
     - '--allow-unauthenticated'
     id: 'deploy-review-service'
-    waitFor: ['push-review-service', 'grant-secret-accessor']
+    waitFor: ['push-review-service']
 
   # Deploy API Gateway (last - depends on all services)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -293,7 +269,7 @@ steps:
     - '--set-secrets=JWT_SECRET=jwt-secret:latest'
     - '--allow-unauthenticated'
     id: 'deploy-api-gateway'
-    waitFor: ['push-api-gateway', 'deploy-user-service', 'deploy-hotel-service', 'deploy-room-service', 'grant-secret-accessor']
+    waitFor: ['push-api-gateway', 'deploy-user-service', 'deploy-hotel-service', 'deploy-room-service']
 
 images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway:$SHORT_SHA'
