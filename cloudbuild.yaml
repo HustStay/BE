@@ -203,9 +203,9 @@ steps:
     - '--port=8080'
     - '--memory=1Gi'
     - '--timeout=600'
-    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/room_service,DB_USERNAME=postgres,DB_PASSWORD=18052004'
-    - '--set-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
-    - '--set-env-vars=BOOKING_SERVICE_URL=https://booking-service-310906765270.asia-southeast1.run.app'
+    - '--update-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/room_service,DB_USERNAME=postgres,DB_PASSWORD=18052004'
+    - '--update-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
+    - '--update-env-vars=BOOKING_SERVICE_URL=https://booking-service-310906765270.asia-southeast1.run.app'
     id: 'deploy-room-service'
     waitFor: ['delete-room-service']
 
@@ -235,9 +235,9 @@ steps:
     - '--port=8080'
     - '--memory=1Gi'
     - '--timeout=600'
-    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/booking_service,DB_USERNAME=postgres,DB_PASSWORD=18052004,GOOGLE_CLIENT_ID=client-id,GOOGLE_CLIENT_SECRET=client-secret'
-    - '--set-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
-    - '--set-env-vars=USER_SERVICE_URL=https://user-service-310906765270.asia-southeast1.run.app'
+    - '--update-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/booking_service,DB_USERNAME=postgres,DB_PASSWORD=18052004,GOOGLE_CLIENT_ID=client-id,GOOGLE_CLIENT_SECRET=client-secret'
+    - '--update-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
+    - '--update-env-vars=USER_SERVICE_URL=https://user-service-310906765270.asia-southeast1.run.app'
     id: 'deploy-booking-service'
     waitFor: ['clear-booking-service-env']
 
@@ -272,17 +272,17 @@ steps:
     id: 'deploy-payment-service'
     waitFor: ['clear-payment-service-env']
 
-  # Clear stale env vars for Review Service before redeploy
+  # Recreate Review Service to avoid stale env var typing from prior revisions
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: bash
     args:
     - '-c'
     - |
-      gcloud run services update review-service \
+      gcloud run services delete review-service \
         --project=$PROJECT_ID \
         --region=${_REGION} \
-        --clear-env-vars || true
-    id: 'clear-review-service-env'
+        --quiet || true
+    id: 'delete-review-service'
     waitFor: ['push-review-service']
 
   # Deploy Review Service
@@ -302,7 +302,7 @@ steps:
     - '--update-env-vars=USER_SERVICE_URL=https://user-service-310906765270.asia-southeast1.run.app'
     - '--update-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
     id: 'deploy-review-service'
-    waitFor: ['clear-review-service-env']
+    waitFor: ['delete-review-service']
 
   # Deploy API Gateway (last - depends on all services)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
