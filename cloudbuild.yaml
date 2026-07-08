@@ -152,6 +152,19 @@ steps:
     id: 'deploy-hotel-service'
     waitFor: ['push-hotel-service']
 
+  # Clear stale env vars for Room Service before redeploy
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+    - '-c'
+    - |
+      gcloud run services update room-service \
+        --project=$PROJECT_ID \
+        --region=${_REGION} \
+        --remove-env-vars=DB_PASSWORD,DB_USERNAME,DB_URL,SERVER_PORT,EUREKA_CLIENT_ENABLED || true
+    id: 'clear-room-service-env'
+    waitFor: ['push-room-service']
+
   # Deploy Room Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -165,12 +178,11 @@ steps:
     - '--port=8080'
     - '--memory=1Gi'
     - '--timeout=600'
-    - '--clear-env-vars'
     - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/room_service,DB_USERNAME=postgres,DB_PASSWORD=18052004'
     - '--set-env-vars=HOTEL_SERVICE_URL=https://hotel-service-310906765270.asia-southeast1.run.app'
     - '--set-env-vars=BOOKING_SERVICE_URL=https://booking-service-310906765270.asia-southeast1.run.app'
     id: 'deploy-room-service'
-    waitFor: ['push-room-service']
+    waitFor: ['clear-room-service-env']
 
   # Deploy Booking Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
