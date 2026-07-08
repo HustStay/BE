@@ -188,7 +188,6 @@ steps:
     - '--set-secrets=DB_PASSWORD=db-password:latest'
     - '--set-secrets=GOOGLE_CLIENT_ID=google-client-id:latest'
     - '--set-secrets=GOOGLE_CLIENT_SECRET=google-client-secret:latest'
-    - '--allow-unauthenticated'
     id: 'deploy-booking-service'
     waitFor: ['push-booking-service']
 
