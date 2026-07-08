@@ -6,6 +6,21 @@ substitutions:
   _REPO: huststay-repo
 
 steps:
+  # Ensure Artifact Registry repository exists before any push
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        if ! gcloud artifacts repositories describe "${_REPO}" --location="${_REGION}" >/dev/null 2>&1; then
+          gcloud artifacts repositories create "${_REPO}" \
+            --location="${_REGION}" \
+            --repository-format=docker \
+            --description="HustStay Docker images"
+        fi
+    id: 'ensure-artifact-repo'
+
   # ========== BUILD ALL SERVICES ==========
   
   # Build User Service
@@ -55,37 +70,37 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api-gateway']
     id: 'push-api-gateway'
-    waitFor: ['build-api-gateway']
+    waitFor: ['build-api-gateway', 'ensure-artifact-repo']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/user-service']
     id: 'push-user-service'
-    waitFor: ['build-user-service']
+    waitFor: ['build-user-service', 'ensure-artifact-repo']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/hotel-service']
     id: 'push-hotel-service'
-    waitFor: ['build-hotel-service']
+    waitFor: ['build-hotel-service', 'ensure-artifact-repo']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/room-service']
     id: 'push-room-service'
-    waitFor: ['build-room-service']
+    waitFor: ['build-room-service', 'ensure-artifact-repo']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/booking-service']
     id: 'push-booking-service'
-    waitFor: ['build-booking-service']
+    waitFor: ['build-booking-service', 'ensure-artifact-repo']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/payment-service']
     id: 'push-payment-service'
-    waitFor: ['build-payment-service']
+    waitFor: ['build-payment-service', 'ensure-artifact-repo']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/review-service']
     id: 'push-review-service'
-    waitFor: ['build-review-service']
+    waitFor: ['build-review-service', 'ensure-artifact-repo']
 
   # ========== DEPLOY TO CLOUD RUN ==========
 
