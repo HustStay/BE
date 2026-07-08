@@ -115,6 +115,19 @@ steps:
 
   # ========== DEPLOY TO CLOUD RUN ==========
 
+  # Clear stale env vars for User Service before redeploy
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+    - '-c'
+    - |
+      gcloud run services update user-service \
+        --project=$PROJECT_ID \
+        --region=${_REGION} \
+        --remove-env-vars=DB_PASSWORD,DB_USERNAME,DB_URL,SERVER_PORT,EUREKA_CLIENT_ENABLED,JWT_SECRET || true
+    id: 'clear-user-service-env'
+    waitFor: ['push-user-service']
+
   # Deploy User Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -128,9 +141,9 @@ steps:
     - '--port=8080'
     - '--memory=1Gi'
     - '--timeout=600'
-    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://14.162.146.23:5432/user_service,DB_USERNAME=root'
+    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/user_service,DB_USERNAME=postgres,DB_PASSWORD=18052004,JWT_SECRET=secret123'
     id: 'deploy-user-service'
-    waitFor: ['push-user-service']
+    waitFor: ['clear-user-service-env']
 
   # Clear stale env vars for Hotel Service before redeploy
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
