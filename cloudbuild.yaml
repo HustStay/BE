@@ -21,6 +21,17 @@ steps:
         fi
     id: 'ensure-artifact-repo'
 
+  # Enable APIs required by Cloud Run deployments that consume Secret Manager
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        gcloud services enable secretmanager.googleapis.com --project="$PROJECT_ID"
+    id: 'enable-secret-manager-api'
+    waitFor: ['ensure-artifact-repo']
+
   # ========== BUILD ALL SERVICES ==========
   
   # Build User Service
@@ -120,9 +131,8 @@ steps:
     - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://14.162.146.23:5432/user_service,DB_USERNAME=root'
     - '--set-secrets=DB_PASSWORD=db-password:latest'
     - '--set-secrets=JWT_SECRET=jwt-secret:latest'
-    - '--allow-unauthenticated'
     id: 'deploy-user-service'
-    waitFor: ['push-user-service']
+    waitFor: ['push-user-service', 'enable-secret-manager-api']
 
   # Deploy Hotel Service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
