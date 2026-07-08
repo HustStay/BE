@@ -171,9 +171,9 @@ steps:
     - '--port=8080'
     - '--memory=1Gi'
     - '--timeout=600'
-    - '--set-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/hotel_service,DB_USERNAME=postgres,DB_PASSWORD=18052004'
-    - '--set-env-vars=ROOM_SERVICE_URL=https://room-service-310906765270.asia-southeast1.run.app'
-    - '--set-env-vars=REVIEW_SERVICE_URL=https://review-service-310906765270.asia-southeast1.run.app'
+    - '--update-env-vars=SERVER_PORT=8080,EUREKA_CLIENT_ENABLED=false,DB_URL=jdbc:postgresql://34.142.184.250:5432/hotel_service,DB_USERNAME=postgres,DB_PASSWORD=18052004'
+    - '--update-env-vars=ROOM_SERVICE_URL=https://room-service-310906765270.asia-southeast1.run.app'
+    - '--update-env-vars=REVIEW_SERVICE_URL=https://review-service-310906765270.asia-southeast1.run.app'
     id: 'deploy-hotel-service'
     waitFor: ['clear-hotel-service-env']
 
