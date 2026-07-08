@@ -21,7 +21,7 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    // Gửi yêu cầu đặt phòng vào Kafka.
+    // Xử lý yêu cầu đặt phòng trực tiếp trong request.
     @PostMapping("/booking")
     public ResponseEntity<Map<String, Object>> booking(
             @RequestHeader("X-Auth-UserId") String userIdStr,
@@ -30,13 +30,21 @@ public class BookingController {
         try {
             int customerId = Integer.parseInt(userIdStr);
 
-            // Gửi vào Kafka và lưu trạng thái PENDING
+            // Lưu trạng thái và xử lý ngay trong service
             String requestId = bookingService.submitBookingRequest(customerId, booking);
+            BookingRequest bookingRequest = bookingService.getBookingRequestStatus(requestId);
 
             response.put("requestId", requestId);
-            response.put("status", "PENDING");
-            response.put("message", "Yêu cầu đặt phòng đang được xử lý. Vui lòng chờ...");
-            return ResponseEntity.accepted().body(response);
+            response.put("status", bookingRequest != null ? bookingRequest.getStatus() : "FAILED");
+            if (bookingRequest != null && bookingRequest.getBookingId() != null) {
+                response.put("bookingId", bookingRequest.getBookingId());
+            }
+            response.put("message", bookingRequest != null
+                    ? ("SUCCESS".equals(bookingRequest.getStatus())
+                        ? "Đặt phòng thành công!"
+                        : bookingRequest.getErrorMessage())
+                    : "Đã xảy ra lỗi khi xử lý đặt phòng.");
+            return ResponseEntity.ok(response);
 
         } catch (NumberFormatException e) {
             response.put("message", "Invalid X-Auth-UserId");
@@ -47,7 +55,7 @@ public class BookingController {
         }
     }
 
-    // polling kết quả xử lý booking.
+    // polling kết quả xử lý booking vẫn giữ để tương thích FE.
     @GetMapping("/booking/status/{requestId}")
     public ResponseEntity<Map<String, Object>> getBookingStatus(@PathVariable String requestId) {
         Map<String, Object> response = new HashMap<>();

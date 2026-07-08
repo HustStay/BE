@@ -6,7 +6,6 @@ import com.example.booking_service.client.PaymentServiceClient;
 import com.example.booking_service.client.UserServiceClient;
 import com.example.booking_service.dto.request.AddBooking;
 import com.example.booking_service.dto.request.AddBookingItem;
-import com.example.booking_service.dto.request.BookingRequestEvent;
 import com.example.booking_service.dto.request.CheckInCheckOut;
 import com.example.booking_service.dto.request.Update;
 import com.example.booking_service.dto.response.Bookings;
@@ -19,7 +18,6 @@ import com.example.booking_service.repository.BookingRepository;
 import com.example.booking_service.repository.BookingRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +35,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BookingService implements IBookingService {
     private static final long DUPLICATE_WINDOW_SECONDS = 15;
-    private static final String BOOKING_TOPIC = "booking-request-topic";
 
     @Autowired
     private HotelServiceClient hotelServiceClient;
@@ -53,8 +50,6 @@ public class BookingService implements IBookingService {
     private BookingRequestRepository bookingRequestRepository;
     @Autowired
     private BookingStatusUpdater bookingStatusUpdater;
-    @Autowired(required = false)
-    private KafkaTemplate<String, BookingRequestEvent> bookingKafkaTemplate;
 
     public String submitBookingRequest(int customerId, AddBooking addBooking) {
         String requestId = UUID.randomUUID().toString();
@@ -68,47 +63,24 @@ public class BookingService implements IBookingService {
                 .createdAt(LocalDateTime.now())
                 .build();
         bookingRequestRepository.save(bookingRequest);
-
-        String partitionKey = buildPartitionKey(addBooking);
-
-        BookingRequestEvent event = BookingRequestEvent.builder()
-                .requestId(requestId)
-                .customerId(customerId)
-                .hotelId(addBooking.hotelId)
-                .checkInDate(addBooking.checkInDate)
-                .checkOutDate(addBooking.checkOutDate)
-                .guests(addBooking.guests)
-                .bookingType(addBooking.bookingType)
-                .bookingItems(addBooking.bookingItems)
-                .build();
-
-        if (bookingKafkaTemplate != null) {
-            bookingKafkaTemplate.send(BOOKING_TOPIC, partitionKey, event);
-        } else {
-            processBookingEvent(event);
-        }
+        processBookingRequest(requestId, customerId, addBooking);
 
         return requestId;
     }
 
-    public BookingRequest getBookingRequestStatus(String requestId) {
-        return bookingRequestRepository.findById(requestId).orElse(null);
+    private void processBookingRequest(String requestId, int customerId, AddBooking addBooking) {
+        try {
+            Integer bookingId = addBooking(customerId, addBooking);
+            bookingStatusUpdater.markSuccess(requestId, bookingId);
+        } catch (IllegalStateException e) {
+            bookingStatusUpdater.markFailed(requestId, resolveErrorMessage(e.getMessage()));
+        } catch (Exception e) {
+            bookingStatusUpdater.markFailed(requestId, "Đã xảy ra lỗi khi xử lý đặt phòng.");
+        }
     }
 
-    public void processBookingEvent(BookingRequestEvent event) {
-        System.out.println("[BookingService] Bắt đầu xử lý requestId=" + event.getRequestId());
-        try {
-            Integer bookingId = addBooking(event.getCustomerId(), toAddBooking(event));
-            bookingStatusUpdater.markSuccess(event.getRequestId(), bookingId);
-
-        } catch (IllegalStateException e) {
-            System.err.println("[BookingService] Business error requestId=" + event.getRequestId() + ": " + e.getMessage());
-            bookingStatusUpdater.markFailed(event.getRequestId(), resolveErrorMessage(e.getMessage()));
-
-        } catch (Exception e) {
-            System.err.println("[BookingService] Unexpected error requestId=" + event.getRequestId() + ": " + e.getMessage());
-            bookingStatusUpdater.markFailed(event.getRequestId(), "Đã xảy ra lỗi khi xử lý đặt phòng.");
-        }
+    public BookingRequest getBookingRequestStatus(String requestId) {
+        return bookingRequestRepository.findById(requestId).orElse(null);
     }
 
 
@@ -230,29 +202,6 @@ public class BookingService implements IBookingService {
         return addBookingInternal(customerId, addBooking);
     }
 
-    private String buildPartitionKey(AddBooking addBooking) {
-        // Key bao gồm hotelId để đảm bảo cùng khách sạn xếp hàng cùng partition
-        StringBuilder sb = new StringBuilder(String.valueOf(addBooking.hotelId));
-        if (addBooking.bookingItems != null) {
-            for (AddBookingItem item : addBooking.bookingItems) {
-                if (item != null && item.roomType != null) {
-                    sb.append(":").append(item.roomType.trim().toLowerCase());
-                }
-            }
-        }
-        return sb.toString();
-    }
-
-    private AddBooking toAddBooking(BookingRequestEvent event) {
-        AddBooking addBooking = new AddBooking();
-        addBooking.hotelId = event.getHotelId();
-        addBooking.checkInDate = event.getCheckInDate();
-        addBooking.checkOutDate = event.getCheckOutDate();
-        addBooking.guests = event.getGuests();
-        addBooking.bookingType = event.getBookingType();
-        addBooking.bookingItems = event.getBookingItems();
-        return addBooking;
-    }
 
     private String resolveErrorMessage(String exceptionMessage) {
         if (exceptionMessage == null) return "Đã xảy ra lỗi không xác định.";

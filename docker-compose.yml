@@ -13,46 +13,6 @@ networks:
 services:
 
   # ─────────────────────────────────────────────
-  #  0. ZOOKEEPER (required by Kafka)
-  # ─────────────────────────────────────────────
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - hotel-network
-    restart: unless-stopped
-
-  # ─────────────────────────────────────────────
-  #  0. KAFKA BROKER
-  # ─────────────────────────────────────────────
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    depends_on:
-      - zookeeper
-    networks:
-      - hotel-network
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list > /dev/null 2>&1 || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
-    restart: unless-stopped
-
-  # ─────────────────────────────────────────────
   #  1. EUREKA SERVER (Service Discovery)
   # ─────────────────────────────────────────────
   eureka-server:
@@ -193,7 +153,6 @@ services:
       - DB_PASSWORD=18052004
       - EUREKA_URL=http://eureka-server:8761/eureka/
       - EUREKA_CLIENT_ENABLED=true
-      - KAFKA_SERVERS=kafka:29092
       - JPA_SHOW_SQL=false
       - GOOGLE_CLIENT_ID=your-client-id
       - GOOGLE_CLIENT_SECRET=your-client-secret
@@ -201,8 +160,6 @@ services:
       - hotel-network
     depends_on:
       eureka-server:
-        condition: service_healthy
-      kafka:
         condition: service_healthy
     restart: unless-stopped
 
